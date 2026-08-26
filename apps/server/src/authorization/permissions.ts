@@ -8,6 +8,7 @@ export const PERMISSIONS = {
   WEBINAR_CREATE: "webinar.create",
   WEBINAR_UPDATE: "webinar.update",
   WEBINAR_PUBLISH: "webinar.publish",
+  WEBINAR_MANAGE_ALL: "webinar.manage-all",
   CONTENT_READ: "content.read",
   CONTENT_CREATE: "content.create",
   CONTENT_UPDATE: "content.update",

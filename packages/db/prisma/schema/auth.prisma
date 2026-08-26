@@ -17,6 +17,8 @@ model User {
   mediaAssetsCreated         MediaAsset[]              @relation("MediaAssetCreator")
   researchContentAuthored    ResearchContent[]         @relation("ResearchContentAuthor")
   researchContentPublished   ResearchContent[]         @relation("ResearchContentPublisher")
+  webinarsCreated            Webinar[]                 @relation("WebinarCreator")
+  webinarsPublished          Webinar[]                 @relation("WebinarPublisher")
 
   @@unique([email])
   @@map("user")

@@ -1,0 +1,46 @@
+enum WebinarSessionType {
+  ONLINE
+  OFFLINE
+  HYBRID
+
+  @@map("webinar_session_type")
+}
+
+enum WebinarStatus {
+  DRAFT
+  PUBLISHED
+  COMPLETED
+  ARCHIVED
+
+  @@map("webinar_status")
+}
+
+model Webinar {
+  id              String             @id @default(cuid())
+  title           String
+  slug            String             @unique
+  description     String
+  speakerName     String?            @map("speaker_name")
+  scheduledAt     DateTime           @map("scheduled_at") @db.Timestamptz(3)
+  sessionType     WebinarSessionType @map("session_type")
+  venue           String?
+  registrationUrl String?            @map("registration_url")
+  meetingUrl      String?            @map("meeting_url")
+  coverAssetId    String?            @map("cover_asset_id")
+  status          WebinarStatus      @default(DRAFT)
+  createdById     String             @map("created_by_id")
+  publishedById   String?            @map("published_by_id")
+  publishedAt     DateTime?          @map("published_at") @db.Timestamptz(3)
+  createdAt       DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt       DateTime           @updatedAt @map("updated_at") @db.Timestamptz(3)
+  createdBy       User               @relation("WebinarCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  publishedBy     User?              @relation("WebinarPublisher", fields: [publishedById], references: [id], onDelete: SetNull)
+  coverAsset      MediaAsset?        @relation(fields: [coverAssetId], references: [id], onDelete: SetNull)
+
+  @@index([createdById, createdAt, id])
+  @@index([publishedById])
+  @@index([coverAssetId])
+  @@index([status, scheduledAt, id])
+  @@index([status, createdAt, id])
+  @@map("webinars")
+}

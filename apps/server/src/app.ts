@@ -4,6 +4,7 @@ import {
   checkDatabase,
   identityRouter,
   researchContentRouter,
+  webinarRouter,
 } from "./infrastructure";
 import { createHttpApp } from "./transport/http/app";
 import type { Express } from "express";
@@ -14,4 +15,5 @@ export const app: Express = createHttpApp({
   corsOrigin: serverConfig.corsOrigin,
   identityRouter,
   researchContentRouter,
+  webinarRouter,
 });

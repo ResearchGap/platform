@@ -7,6 +7,7 @@ interface HttpAppDependencies {
   corsOrigin: string;
   identityRouter?: Router;
   researchContentRouter?: Router;
+  webinarRouter?: Router;
 }
 
 export function createHttpApp({
@@ -15,6 +16,7 @@ export function createHttpApp({
   corsOrigin,
   identityRouter,
   researchContentRouter,
+  webinarRouter,
 }: HttpAppDependencies): Express {
   const app = express();
 
@@ -36,6 +38,9 @@ export function createHttpApp({
   }
   if (researchContentRouter) {
     app.use("/api", researchContentRouter);
+  }
+  if (webinarRouter) {
+    app.use("/api", webinarRouter);
   }
 
   app.get("/", (_request, response) => {

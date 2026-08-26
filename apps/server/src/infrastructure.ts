@@ -8,9 +8,12 @@ import { RegistrationService } from "./modules/identity/registration.service";
 import { BetterAuthIdentityProvider } from "./infrastructure/auth/better-auth-identity";
 import { PrismaIdentityRepository } from "./infrastructure/database/prisma-identity.repository";
 import { PrismaResearchContentRepository } from "./infrastructure/database/prisma-research-content.repository";
+import { PrismaWebinarRepository } from "./infrastructure/database/prisma-webinar.repository";
 import { ResearchContentService } from "./modules/content/content.service";
+import { WebinarService } from "./modules/webinar/webinar.service";
 import { createIdentityRouter } from "./transport/http/routes/identity";
 import { createResearchContentRouter } from "./transport/http/routes/content";
+import { createWebinarRouter } from "./transport/http/routes/webinar";
 
 export const identityRepository = new PrismaIdentityRepository();
 
@@ -30,6 +33,8 @@ const registrationService = new RegistrationService(identityProvider, identityRe
 const approvalService = new ApprovalService(identityRepository);
 const contentRepository = new PrismaResearchContentRepository();
 const contentService = new ResearchContentService(contentRepository);
+const webinarRepository = new PrismaWebinarRepository();
+const webinarService = new WebinarService(webinarRepository);
 
 const resolveSessionUser = async (headers: Parameters<typeof fromNodeHeaders>[0]) => {
   const session = await auth.api.getSession({ headers: fromNodeHeaders(headers) });
@@ -47,6 +52,11 @@ export const researchContentRouter: Router = createResearchContentRouter({
   contentService,
   identityRepository,
   resolveSessionUser,
+});
+export const webinarRouter: Router = createWebinarRouter({
+  identityRepository,
+  resolveSessionUser,
+  webinarService,
 });
 
 export async function checkDatabase() {
