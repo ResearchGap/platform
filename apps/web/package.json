@@ -6,6 +6,9 @@
     "dev": "next dev --port 3001",
     "build": "next build",
     "check-types": "tsc --noEmit",
+    "format": "biome format --config-path ../../biome.json --write .",
+    "format:check": "biome format --config-path ../../biome.json .",
+    "lint": "biome lint --config-path ../../biome.json .",
     "start": "next start"
   },
   "dependencies": {

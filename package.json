@@ -28,12 +28,17 @@
     "dev": "turbo run dev",
     "build": "turbo run build",
     "check-types": "turbo run check-types",
+    "lint": "turbo run lint",
+    "format": "turbo run format",
+    "format:check": "turbo run format:check",
+    "test": "turbo run test",
     "dev:web": "turbo run dev -F web --",
     "dev:server": "turbo run dev -F server --",
     "db:push": "turbo run db:push -F @platform/db --",
     "db:studio": "turbo run db:studio -F @platform/db --",
     "db:generate": "turbo run db:generate -F @platform/db --",
-    "db:migrate": "turbo run db:migrate -F @platform/db --"
+    "db:migrate": "turbo run db:migrate -F @platform/db --",
+    "db:validate": "turbo run db:validate -F @platform/db --"
   },
   "dependencies": {
     "@platform/env": "workspace:*",
@@ -42,6 +47,7 @@
   },
   "devDependencies": {
     "@platform/config": "workspace:*",
+    "@biomejs/biome": "^2.5.10",
     "@types/bun": "catalog:",
     "turbo": "^2.10.7",
     "typescript": "catalog:"

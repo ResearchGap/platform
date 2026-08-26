@@ -28,9 +28,17 @@ bun install
 This project uses PostgreSQL with Prisma.
 
 1. Make sure you have a PostgreSQL database set up.
-2. Update your `apps/server/.env` file with your PostgreSQL connection details.
+2. Copy `apps/server/.env.example` to `apps/server/.env` and set the real values.
+3. Copy `apps/web/.env.example` to `apps/web/.env` and set the backend URL.
 
-3. Apply the schema to your database:
+4. Validate the Prisma schema and generate the client:
+
+```bash
+bun run db:validate
+bun run db:generate
+```
+
+5. Apply the schema to your database when provisioning a new development database:
 
 ```bash
 bun run db:push
@@ -45,6 +53,11 @@ bun run dev
 Open [http://localhost:3001](http://localhost:3001) in your browser to see the web application.
 The API is running at [http://localhost:3000](http://localhost:3000).
 
+Operational checks are available at:
+
+- `GET http://localhost:3000/health` for process health
+- `GET http://localhost:3000/ready` for application and database readiness
+
 ## UI Customization
 
 React web apps in this stack share shadcn/ui primitives through `packages/ui`.
@@ -58,7 +71,7 @@ React web apps in this stack share shadcn/ui primitives through `packages/ui`.
 Run this from the project root to add more primitives to the shared UI package:
 
 ```bash
-npx shadcn@latest add accordion dialog popover sheet table -c packages/ui
+bunx --bun shadcn@latest add accordion dialog popover sheet table -c packages/ui
 ```
 
 Import shared components like this:
@@ -81,7 +94,9 @@ platform/
 ├── packages/
 │   ├── ui/          # Shared shadcn/ui components and styles
 │   ├── auth/        # Authentication configuration & logic
-│   └── db/          # Database schema & queries
+│   ├── db/          # Database schema & Prisma client
+│   ├── env/         # Validated server and web configuration
+│   └── config/      # Shared TypeScript configuration
 ```
 
 ## Available Scripts
@@ -91,7 +106,12 @@ platform/
 - `bun run dev:web`: Start only the web application
 - `bun run dev:server`: Start only the server
 - `bun run check-types`: Check TypeScript types across all apps
+- `bun run lint`: Lint workspace packages
+- `bun run format:check`: Check workspace formatting
+- `bun run format`: Format workspace packages
+- `bun run test`: Run workspace tests
 - `bun run db:push`: Push schema changes to database
+- `bun run db:validate`: Validate the Prisma schema
 - `bun run db:generate`: Generate database client/types
 - `bun run db:migrate`: Run database migrations
 - `bun run db:studio`: Open database studio UI

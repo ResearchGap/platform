@@ -9,7 +9,12 @@
       "default": "./src/*.ts"
     }
   },
-  "scripts": {},
+  "scripts": {
+    "check-types": "tsc --noEmit",
+    "format": "biome format --config-path ../../biome.json --write .",
+    "format:check": "biome format --config-path ../../biome.json .",
+    "lint": "biome lint --config-path ../../biome.json ."
+  },
   "dependencies": {
     "@platform/db": "workspace:*",
     "@platform/env": "workspace:*",

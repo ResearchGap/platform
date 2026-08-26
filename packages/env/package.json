@@ -7,6 +7,12 @@
     "./server": "./src/server.ts",
     "./web": "./src/web.ts"
   },
+  "scripts": {
+    "check-types": "tsc --noEmit",
+    "format": "biome format --config-path ../../biome.json --write .",
+    "format:check": "biome format --config-path ../../biome.json .",
+    "lint": "biome lint --config-path ../../biome.json ."
+  },
   "dependencies": {
     "@t3-oss/env-core": "^0.13.11",
     "@t3-oss/env-nextjs": "^0.13.11",

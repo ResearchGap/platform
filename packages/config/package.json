@@ -1,5 +1,10 @@
 {
   "name": "@platform/config",
   "version": "0.0.0",
-  "private": true
+  "private": true,
+  "scripts": {
+    "format": "biome format --config-path ../../biome.json --write .",
+    "format:check": "biome format --config-path ../../biome.json .",
+    "lint": "biome lint --config-path ../../biome.json ."
+  }
 }
