@@ -4,6 +4,7 @@
   "main": "src/index.ts",
   "scripts": {
     "build": "tsdown",
+    "bootstrap:superadmin": "bun run src/scripts/bootstrap-superadmin.ts",
     "check-types": "tsc -b",
     "compile": "bun build --compile --minify --sourcemap --bytecode ./src/index.ts --outfile server",
     "dev": "bun run --hot src/index.ts",
@@ -11,7 +12,7 @@
     "format:check": "biome format --config-path ../../biome.json src package.json tsconfig.json tsdown.config.ts",
     "lint": "biome lint --config-path ../../biome.json src package.json tsconfig.json tsdown.config.ts",
     "start": "bun run dist/index.mjs",
-    "test": "bun test"
+    "test": "bun test --path-ignore-patterns=dist"
   },
   "dependencies": {
     "@platform/auth": "workspace:*",

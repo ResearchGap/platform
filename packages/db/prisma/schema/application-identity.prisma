@@ -1,0 +1,108 @@
+enum RoleCode {
+  MENTEE
+  MENTOR
+  CEO
+  COO
+  CMO
+  SUPERADMIN
+
+  @@map("role_code")
+}
+
+enum AccessProfileCode {
+  MENTEE_DEFAULT
+  MENTOR_DEFAULT
+  EXECUTIVE_READ
+  OPERATIONS_FULL
+  MARKETING_FULL
+  SUPERADMIN
+
+  @@map("access_profile_code")
+}
+
+enum AccountStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+  DISABLED
+
+  @@map("account_status")
+}
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+
+  @@map("approval_status")
+}
+
+enum PermissionEffect {
+  ALLOW
+  DENY
+
+  @@map("permission_effect")
+}
+
+model UserProfile {
+  id            String   @id @default(cuid())
+  userId        String   @unique @map("user_id")
+  nickname      String?
+  whatsapp      String?
+  institution   String?
+  researchField String?  @map("research_field")
+  biography     String?
+  expertise     String?
+  affiliation   String?
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_profiles")
+}
+
+model UserAccess {
+  userId            String            @id @map("user_id")
+  roleCode          RoleCode          @map("role_code")
+  accessProfileCode AccessProfileCode @map("access_profile_code")
+  accountStatus     AccountStatus     @map("account_status")
+  createdAt         DateTime          @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt         DateTime          @updatedAt @map("updated_at") @db.Timestamptz(3)
+  user              User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_access")
+}
+
+model AccountApproval {
+  id                String         @id @default(cuid())
+  userId            String         @unique @map("user_id")
+  requestedRoleCode RoleCode       @map("requested_role_code")
+  status            ApprovalStatus @default(PENDING)
+  reviewedById      String?        @map("reviewed_by_id")
+  reviewedAt        DateTime?      @map("reviewed_at") @db.Timestamptz(3)
+  reviewNote        String?        @map("review_note")
+  createdAt         DateTime       @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt         DateTime       @updatedAt @map("updated_at") @db.Timestamptz(3)
+  user              User           @relation("ApprovalTarget", fields: [userId], references: [id], onDelete: Cascade)
+  reviewedBy        User?          @relation("ApprovalReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+
+  @@index([reviewedById])
+  @@map("account_approvals")
+}
+
+model UserPermissionOverride {
+  id            String           @id @default(cuid())
+  userId        String           @map("user_id")
+  permissionKey String           @map("permission_key")
+  effect        PermissionEffect
+  reason        String?
+  expiresAt     DateTime?        @map("expires_at") @db.Timestamptz(3)
+  createdById   String           @map("created_by_id")
+  createdAt     DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
+  user          User             @relation("PermissionOverrideTarget", fields: [userId], references: [id], onDelete: Cascade)
+  createdBy     User             @relation("PermissionOverrideCreator", fields: [createdById], references: [id], onDelete: Restrict)
+
+  @@unique([userId, permissionKey])
+  @@index([createdById])
+  @@map("user_permission_overrides")
+}

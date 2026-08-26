@@ -27,6 +27,7 @@
   "scripts": {
     "dev": "turbo run dev",
     "build": "turbo run build",
+    "bootstrap:superadmin": "turbo run bootstrap:superadmin -F server --",
     "check-types": "turbo run check-types",
     "lint": "turbo run lint",
     "format": "turbo run format",
@@ -38,6 +39,7 @@
     "db:studio": "turbo run db:studio -F @platform/db --",
     "db:generate": "turbo run db:generate -F @platform/db --",
     "db:migrate": "turbo run db:migrate -F @platform/db --",
+    "db:migrate:deploy": "turbo run db:migrate:deploy -F @platform/db --",
     "db:validate": "turbo run db:validate -F @platform/db --"
   },
   "dependencies": {

@@ -3,7 +3,11 @@ import { env } from "@platform/env/server";
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 
-export function createAuth() {
+interface AuthLifecycle {
+  onUserCreated?: (user: { id: string }) => Promise<void>;
+}
+
+export function createAuth(lifecycle: AuthLifecycle = {}) {
   return betterAuth({
     database: prismaAdapter(prisma, {
       provider: "postgresql",
@@ -22,8 +26,15 @@ export function createAuth() {
         httpOnly: true,
       },
     },
+    databaseHooks: lifecycle.onUserCreated
+      ? {
+          user: {
+            create: {
+              after: lifecycle.onUserCreated,
+            },
+          },
+        }
+      : undefined,
     plugins: [],
   });
 }
-
-export const auth = createAuth();

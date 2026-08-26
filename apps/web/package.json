@@ -6,9 +6,9 @@
     "dev": "next dev --port 3001",
     "build": "next build",
     "check-types": "tsc --noEmit",
-    "format": "biome format --config-path ../../biome.json --write .",
-    "format:check": "biome format --config-path ../../biome.json .",
-    "lint": "biome lint --config-path ../../biome.json .",
+    "format": "biome format --config-path ../../biome.json --write src components.json next.config.ts package.json postcss.config.mjs tsconfig.json",
+    "format:check": "biome format --config-path ../../biome.json src components.json next.config.ts package.json postcss.config.mjs tsconfig.json",
+    "lint": "biome lint --config-path ../../biome.json src components.json next.config.ts package.json postcss.config.mjs tsconfig.json",
     "start": "next start"
   },
   "dependencies": {

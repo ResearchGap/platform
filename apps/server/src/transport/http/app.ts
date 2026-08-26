@@ -1,16 +1,18 @@
 import cors from "cors";
-import express, { type Express, type RequestHandler } from "express";
+import express, { type Express, type RequestHandler, type Router } from "express";
 
 interface HttpAppDependencies {
   authHandler: RequestHandler;
   checkDatabase: () => Promise<void>;
   corsOrigin: string;
+  identityRouter?: Router;
 }
 
 export function createHttpApp({
   authHandler,
   checkDatabase,
   corsOrigin,
+  identityRouter,
 }: HttpAppDependencies): Express {
   const app = express();
 
@@ -26,6 +28,10 @@ export function createHttpApp({
   app.all("/api/auth{/*path}", authHandler);
 
   app.use(express.json());
+
+  if (identityRouter) {
+    app.use("/api", identityRouter);
+  }
 
   app.get("/", (_request, response) => {
     response.status(200).send("OK");
