@@ -1,0 +1,24 @@
+{
+  "name": "@platform/auth",
+  "type": "module",
+  "exports": {
+    ".": {
+      "default": "./src/index.ts"
+    },
+    "./*": {
+      "default": "./src/*.ts"
+    }
+  },
+  "scripts": {},
+  "dependencies": {
+    "@platform/db": "workspace:*",
+    "@platform/env": "workspace:*",
+    "better-auth": "catalog:",
+    "dotenv": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@platform/config": "workspace:*",
+    "typescript": "catalog:"
+  }
+}
