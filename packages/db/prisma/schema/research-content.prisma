@@ -1,0 +1,64 @@
+enum MediaSourceType {
+  MANAGED
+  EXTERNAL
+
+  @@map("media_source_type")
+}
+
+enum ResearchContentType {
+  NEWS
+  ARTICLE
+  ANNOUNCEMENT
+
+  @@map("research_content_type")
+}
+
+enum ResearchContentStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+
+  @@map("research_content_status")
+}
+
+model MediaAsset {
+  id              String            @id @default(cuid())
+  createdById     String?           @map("created_by_id")
+  sourceType      MediaSourceType   @map("source_type")
+  storageKey      String?           @map("storage_key")
+  externalUrl     String?           @map("external_url")
+  originalName    String?           @map("original_name")
+  mimeType        String?           @map("mime_type")
+  createdAt       DateTime          @default(now()) @map("created_at") @db.Timestamptz(3)
+  createdBy       User?             @relation("MediaAssetCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  contentCoverFor ResearchContent[]
+
+  @@index([createdById])
+  @@map("media_assets")
+}
+
+model ResearchContent {
+  id            String                @id @default(cuid())
+  title         String
+  slug          String                @unique
+  excerpt       String?
+  content       String
+  contentType   ResearchContentType   @map("content_type")
+  coverAssetId  String?               @map("cover_asset_id")
+  status        ResearchContentStatus @default(DRAFT)
+  authorId      String                @map("author_id")
+  publishedById String?               @map("published_by_id")
+  publishedAt   DateTime?             @map("published_at") @db.Timestamptz(3)
+  createdAt     DateTime              @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt     DateTime              @updatedAt @map("updated_at") @db.Timestamptz(3)
+  author        User                  @relation("ResearchContentAuthor", fields: [authorId], references: [id], onDelete: Restrict)
+  publishedBy   User?                 @relation("ResearchContentPublisher", fields: [publishedById], references: [id], onDelete: SetNull)
+  coverAsset    MediaAsset?           @relation(fields: [coverAssetId], references: [id], onDelete: SetNull)
+
+  @@index([authorId, createdAt, id])
+  @@index([publishedById])
+  @@index([coverAssetId])
+  @@index([status, publishedAt, id])
+  @@index([status, createdAt, id])
+  @@map("research_content")
+}

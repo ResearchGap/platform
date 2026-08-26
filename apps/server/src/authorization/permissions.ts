@@ -13,6 +13,7 @@ export const PERMISSIONS = {
   CONTENT_UPDATE: "content.update",
   CONTENT_PUBLISH: "content.publish",
   CONTENT_MANAGE_VISUAL: "content.visual.manage",
+  CONTENT_MANAGE_ALL: "content.manage-all",
   ENROLLMENT_CREATE: "enrollment.create",
   ENROLLMENT_READ_OWN: "enrollment.read-own",
   ENROLLMENT_MANAGE: "enrollment.manage",

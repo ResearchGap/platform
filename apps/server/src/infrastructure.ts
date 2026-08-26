@@ -7,7 +7,10 @@ import { ApprovalService } from "./modules/identity/approval.service";
 import { RegistrationService } from "./modules/identity/registration.service";
 import { BetterAuthIdentityProvider } from "./infrastructure/auth/better-auth-identity";
 import { PrismaIdentityRepository } from "./infrastructure/database/prisma-identity.repository";
+import { PrismaResearchContentRepository } from "./infrastructure/database/prisma-research-content.repository";
+import { ResearchContentService } from "./modules/content/content.service";
 import { createIdentityRouter } from "./transport/http/routes/identity";
+import { createResearchContentRouter } from "./transport/http/routes/content";
 
 export const identityRepository = new PrismaIdentityRepository();
 
@@ -25,16 +28,25 @@ export const auth = createAuth({
 const identityProvider = new BetterAuthIdentityProvider(auth);
 const registrationService = new RegistrationService(identityProvider, identityRepository);
 const approvalService = new ApprovalService(identityRepository);
+const contentRepository = new PrismaResearchContentRepository();
+const contentService = new ResearchContentService(contentRepository);
+
+const resolveSessionUser = async (headers: Parameters<typeof fromNodeHeaders>[0]) => {
+  const session = await auth.api.getSession({ headers: fromNodeHeaders(headers) });
+  return session ? { id: session.user.id } : null;
+};
 
 export const authHandler = toNodeHandler(auth);
 export const identityRouter: Router = createIdentityRouter({
   approvalService,
   registrationService,
   repository: identityRepository,
-  resolveSessionUser: async (headers) => {
-    const session = await auth.api.getSession({ headers: fromNodeHeaders(headers) });
-    return session ? { id: session.user.id } : null;
-  },
+  resolveSessionUser,
+});
+export const researchContentRouter: Router = createResearchContentRouter({
+  contentService,
+  identityRepository,
+  resolveSessionUser,
 });
 
 export async function checkDatabase() {

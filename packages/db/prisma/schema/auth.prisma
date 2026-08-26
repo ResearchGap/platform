@@ -14,6 +14,9 @@ model User {
   approvalsReviewed          AccountApproval[]        @relation("ApprovalReviewer")
   permissionOverrides        UserPermissionOverride[] @relation("PermissionOverrideTarget")
   permissionOverridesCreated UserPermissionOverride[] @relation("PermissionOverrideCreator")
+  mediaAssetsCreated         MediaAsset[]              @relation("MediaAssetCreator")
+  researchContentAuthored    ResearchContent[]         @relation("ResearchContentAuthor")
+  researchContentPublished   ResearchContent[]         @relation("ResearchContentPublisher")
 
   @@unique([email])
   @@map("user")

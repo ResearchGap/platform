@@ -6,6 +6,7 @@ interface HttpAppDependencies {
   checkDatabase: () => Promise<void>;
   corsOrigin: string;
   identityRouter?: Router;
+  researchContentRouter?: Router;
 }
 
 export function createHttpApp({
@@ -13,13 +14,14 @@ export function createHttpApp({
   checkDatabase,
   corsOrigin,
   identityRouter,
+  researchContentRouter,
 }: HttpAppDependencies): Express {
   const app = express();
 
   app.use(
     cors({
       origin: corsOrigin,
-      methods: ["GET", "POST", "OPTIONS"],
+      methods: ["GET", "POST", "PATCH", "OPTIONS"],
       allowedHeaders: ["Content-Type", "Authorization"],
       credentials: true,
     }),
@@ -31,6 +33,9 @@ export function createHttpApp({
 
   if (identityRouter) {
     app.use("/api", identityRouter);
+  }
+  if (researchContentRouter) {
+    app.use("/api", researchContentRouter);
   }
 
   app.get("/", (_request, response) => {
