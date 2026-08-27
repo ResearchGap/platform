@@ -1,156 +1,227 @@
-import { Button } from "@platform/ui/components/button";
+"use client";
+
+import { Alert, AlertDescription, AlertTitle } from "@platform/ui/components/alert";
+import { Button, buttonVariants } from "@platform/ui/components/button";
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@platform/ui/components/field";
 import { Input } from "@platform/ui/components/input";
-import { Label } from "@platform/ui/components/label";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@platform/ui/components/select";
+import { Spinner } from "@platform/ui/components/spinner";
+import { cn } from "@platform/ui/lib/utils";
 import { useForm } from "@tanstack/react-form";
+import { AlertCircle } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { toast } from "sonner";
-import z from "zod";
+import { useState } from "react";
+import { z } from "zod";
 
-import { authClient } from "@/lib/auth-client";
+import { registerAccount } from "@/lib/api/account";
+import { ApiError } from "@/lib/api/client";
 
-import Loader from "./loader";
+type RegistrationKind = "MENTEE" | "MENTOR" | "STAFF";
+type StaffRole = "CEO" | "COO" | "CMO";
 
-export default function SignUpForm({ onSwitchToSignIn }: { onSwitchToSignIn: () => void }) {
+const labels: Record<RegistrationKind, { description: string; title: string }> = {
+  MENTEE: {
+    title: "Mentee",
+    description: "Join Bootcamps and access learning resources.",
+  },
+  MENTOR: {
+    title: "Mentor",
+    description: "Apply to guide ResearchGap programs.",
+  },
+  STAFF: {
+    title: "Staff",
+    description: "Apply for an organizational account.",
+  },
+};
+
+const registrationSchema = z.object({
+  name: z.string().trim().min(2, "Name must be at least 2 characters").max(100),
+  email: z.email("Enter a valid email address"),
+  password: z.string().min(8, "Password must be at least 8 characters").max(128),
+  requestedRoleCode: z.enum(["CEO", "COO", "CMO"]),
+});
+
+export default function SignUpForm({ kind }: { kind: RegistrationKind }) {
   const router = useRouter();
-  const { isPending } = authClient.useSession();
-
+  const [requestError, setRequestError] = useState<string | null>(null);
   const form = useForm({
     defaultValues: {
+      name: "",
       email: "",
       password: "",
-      name: "",
+      requestedRoleCode: "COO" as StaffRole,
     },
+    validators: { onSubmit: registrationSchema },
     onSubmit: async ({ value }) => {
-      await authClient.signUp.email(
-        {
+      setRequestError(null);
+      try {
+        await registerAccount({
+          kind,
+          name: value.name,
           email: value.email,
           password: value.password,
-          name: value.name,
-        },
-        {
-          onSuccess: () => {
-            router.push("/dashboard");
-            toast.success("Sign up successful");
-          },
-          onError: (error) => {
-            toast.error(error.error.message || error.error.statusText);
-          },
-        },
-      );
-    },
-    validators: {
-      onSubmit: z.object({
-        name: z.string().min(2, "Name must be at least 2 characters"),
-        email: z.email("Invalid email address"),
-        password: z.string().min(8, "Password must be at least 8 characters"),
-      }),
+          ...(kind === "STAFF" ? { requestedRoleCode: value.requestedRoleCode } : {}),
+        });
+        router.replace(kind === "MENTEE" ? "/dashboard" : "/account");
+        router.refresh();
+      } catch (error) {
+        setRequestError(
+          error instanceof ApiError
+            ? error.message
+            : "Your account could not be created. Please try again.",
+        );
+      }
     },
   });
 
-  if (isPending) {
-    return <Loader />;
-  }
-
   return (
-    <div className="mx-auto w-full mt-10 max-w-md p-6">
-      <h1 className="mb-6 text-center text-3xl font-bold">Create Account</h1>
+    <div className="flex flex-col gap-6">
+      <div className="grid grid-cols-3 gap-2" role="group" aria-label="Account type">
+        {(Object.keys(labels) as RegistrationKind[]).map((option) => (
+          <Link
+            key={option}
+            href={`/register?kind=${option.toLowerCase()}`}
+            className={cn(
+              buttonVariants({ variant: option === kind ? "secondary" : "outline" }),
+              "h-auto min-h-16 flex-col gap-1 whitespace-normal px-2 py-2 text-center",
+            )}
+          >
+            <span>{labels[option].title}</span>
+            <span className="hidden text-xs font-normal text-muted-foreground sm:block">
+              {option === "MENTEE" ? "Instant access" : "Approval required"}
+            </span>
+          </Link>
+        ))}
+      </div>
+
+      <p className="text-sm text-muted-foreground">{labels[kind].description}</p>
 
       <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
+        onSubmit={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
           form.handleSubmit();
         }}
-        className="space-y-4"
       >
-        <div>
+        <FieldGroup>
+          {requestError ? (
+            <Alert variant="destructive">
+              <AlertCircle aria-hidden="true" />
+              <AlertTitle>Unable to create account</AlertTitle>
+              <AlertDescription>{requestError}</AlertDescription>
+            </Alert>
+          ) : null}
+
           <form.Field name="name">
             {(field) => (
-              <div className="space-y-2">
-                <Label htmlFor={field.name}>Name</Label>
+              <Field data-invalid={field.state.meta.errors.length > 0}>
+                <FieldLabel htmlFor={field.name}>Full name</FieldLabel>
                 <Input
                   id={field.name}
                   name={field.name}
+                  autoComplete="name"
                   value={field.state.value}
                   onBlur={field.handleBlur}
-                  onChange={(e) => field.handleChange(e.target.value)}
+                  onChange={(event) => field.handleChange(event.target.value)}
+                  aria-invalid={field.state.meta.errors.length > 0}
                 />
-                {field.state.meta.errors.map((error) => (
-                  <p key={error?.message} className="text-red-500">
-                    {error?.message}
-                  </p>
-                ))}
-              </div>
+                <FieldError errors={field.state.meta.errors} />
+              </Field>
             )}
           </form.Field>
-        </div>
 
-        <div>
           <form.Field name="email">
             {(field) => (
-              <div className="space-y-2">
-                <Label htmlFor={field.name}>Email</Label>
+              <Field data-invalid={field.state.meta.errors.length > 0}>
+                <FieldLabel htmlFor={field.name}>Email</FieldLabel>
                 <Input
                   id={field.name}
                   name={field.name}
                   type="email"
+                  autoComplete="email"
                   value={field.state.value}
                   onBlur={field.handleBlur}
-                  onChange={(e) => field.handleChange(e.target.value)}
+                  onChange={(event) => field.handleChange(event.target.value)}
+                  aria-invalid={field.state.meta.errors.length > 0}
                 />
-                {field.state.meta.errors.map((error) => (
-                  <p key={error?.message} className="text-red-500">
-                    {error?.message}
-                  </p>
-                ))}
-              </div>
+                <FieldError errors={field.state.meta.errors} />
+              </Field>
             )}
           </form.Field>
-        </div>
 
-        <div>
           <form.Field name="password">
             {(field) => (
-              <div className="space-y-2">
-                <Label htmlFor={field.name}>Password</Label>
+              <Field data-invalid={field.state.meta.errors.length > 0}>
+                <FieldLabel htmlFor={field.name}>Password</FieldLabel>
                 <Input
                   id={field.name}
                   name={field.name}
                   type="password"
+                  autoComplete="new-password"
                   value={field.state.value}
                   onBlur={field.handleBlur}
-                  onChange={(e) => field.handleChange(e.target.value)}
+                  onChange={(event) => field.handleChange(event.target.value)}
+                  aria-invalid={field.state.meta.errors.length > 0}
                 />
-                {field.state.meta.errors.map((error) => (
-                  <p key={error?.message} className="text-red-500">
-                    {error?.message}
-                  </p>
-                ))}
-              </div>
+                <FieldDescription>Use at least 8 characters.</FieldDescription>
+                <FieldError errors={field.state.meta.errors} />
+              </Field>
             )}
           </form.Field>
-        </div>
 
-        <form.Subscribe
-          selector={(state) => ({ canSubmit: state.canSubmit, isSubmitting: state.isSubmitting })}
-        >
-          {({ canSubmit, isSubmitting }) => (
-            <Button type="submit" className="w-full" disabled={!canSubmit || isSubmitting}>
-              {isSubmitting ? "Submitting..." : "Sign Up"}
-            </Button>
-          )}
-        </form.Subscribe>
+          {kind === "STAFF" ? (
+            <form.Field name="requestedRoleCode">
+              {(field) => (
+                <Field>
+                  <FieldLabel htmlFor={field.name}>Requested staff role</FieldLabel>
+                  <Select
+                    value={field.state.value}
+                    onValueChange={(value) => field.handleChange(value as StaffRole)}
+                  >
+                    <SelectTrigger id={field.name} className="w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectGroup>
+                        <SelectItem value="CEO">CEO — executive access</SelectItem>
+                        <SelectItem value="COO">COO — operations access</SelectItem>
+                        <SelectItem value="CMO">CMO — content access</SelectItem>
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+                </Field>
+              )}
+            </form.Field>
+          ) : null}
+
+          <form.Subscribe selector={(state) => state.isSubmitting}>
+            {(isSubmitting) => (
+              <Button type="submit" className="w-full" size="lg" disabled={isSubmitting}>
+                {isSubmitting ? <Spinner data-icon="inline-start" /> : null}
+                {isSubmitting ? "Creating account…" : `Register as ${labels[kind].title}`}
+              </Button>
+            )}
+          </form.Subscribe>
+
+          <FieldDescription className="text-center">
+            Already have an account? <Link href="/login">Log in</Link>
+          </FieldDescription>
+        </FieldGroup>
       </form>
-
-      <div className="mt-4 text-center">
-        <Button
-          variant="link"
-          onClick={onSwitchToSignIn}
-          className="text-indigo-600 hover:text-indigo-800"
-        >
-          Already have an account? Sign In
-        </Button>
-      </div>
     </div>
   );
 }

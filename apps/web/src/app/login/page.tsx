@@ -1,16 +1,30 @@
-"use client";
+import type { Metadata, Route } from "next";
+import { redirect } from "next/navigation";
 
-import { useState } from "react";
-
+import { AuthCard } from "@/components/auth/auth-card";
 import SignInForm from "@/components/sign-in-form";
-import SignUpForm from "@/components/sign-up-form";
+import { getServerSession } from "@/lib/server-auth";
 
-export default function LoginPage() {
-  const [showSignIn, setShowSignIn] = useState(false);
+export const metadata: Metadata = { title: "Log in" };
 
-  return showSignIn ? (
-    <SignInForm onSwitchToSignUp={() => setShowSignIn(false)} />
-  ) : (
-    <SignUpForm onSwitchToSignIn={() => setShowSignIn(true)} />
+function safeNextPath(value: string | undefined): Route {
+  return value?.startsWith("/") && !value.startsWith("//") ? (value as Route) : "/dashboard";
+}
+
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ next?: string }>;
+}) {
+  const [session, query] = await Promise.all([getServerSession(), searchParams]);
+  const nextPath = safeNextPath(query.next);
+  if (session?.user) {
+    redirect(nextPath);
+  }
+
+  return (
+    <AuthCard title="Welcome back" description="Log in to continue your ResearchGap journey.">
+      <SignInForm nextPath={nextPath} />
+    </AuthCard>
   );
 }

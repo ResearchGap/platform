@@ -30,17 +30,23 @@ export function PublicEmptyState({
   );
 }
 
-export function PublicErrorState({ retry }: { retry?: () => void }) {
+export function PublicErrorState({
+  description = "The public service is temporarily unavailable. Please try again shortly.",
+  retry,
+  title = "We could not load this page",
+}: {
+  description?: string;
+  retry?: () => void;
+  title?: string;
+}) {
   return (
     <Empty>
       <EmptyHeader>
         <EmptyMedia variant="icon">
           <CircleAlert aria-hidden="true" />
         </EmptyMedia>
-        <EmptyTitle>We could not load this page</EmptyTitle>
-        <EmptyDescription>
-          The public service is temporarily unavailable. Please try again shortly.
-        </EmptyDescription>
+        <EmptyTitle>{title}</EmptyTitle>
+        <EmptyDescription>{description}</EmptyDescription>
       </EmptyHeader>
       {retry ? (
         <EmptyContent>

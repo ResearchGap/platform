@@ -92,15 +92,14 @@ export default async function BootcampDetailPage({ params }: DetailProps) {
               ) : null}
             </dl>
             <Link
-              href="/login"
+              href={`/login?next=${encodeURIComponent(`/enroll?bootcampId=${bootcamp.id}`)}`}
               className={buttonVariants({ variant: "brand", size: "lg", className: "w-full" })}
             >
               Log in to enroll
               <ArrowRight data-icon="inline-end" aria-hidden="true" />
             </Link>
             <p className="text-xs leading-5 text-muted-foreground">
-              Enrollment-key entry and learning access will be available in the authenticated
-              experience.
+              After logging in, enter the Mentee enrollment key provided by the organizer.
             </p>
           </aside>
         </div>

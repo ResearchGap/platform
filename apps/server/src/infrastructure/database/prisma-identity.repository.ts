@@ -18,6 +18,9 @@ import {
   APPROVAL_DECISIONS,
   APPROVAL_STATUSES,
   type ApprovalReviewResult,
+  type CurrentAccountDetail,
+  type UpdateUserProfileInput,
+  type UserProfileDetail,
 } from "../../modules/identity/identity.types";
 
 export class PrismaIdentityRepository implements IdentityAccessRepository {
@@ -97,6 +100,76 @@ export class PrismaIdentityRepository implements IdentityAccessRepository {
         expiresAt: override.expiresAt,
       })),
     };
+  }
+
+  async findCurrentAccount(userId: string): Promise<CurrentAccountDetail | null> {
+    const account = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        email: true,
+        image: true,
+        name: true,
+        access: {
+          select: {
+            accessProfileCode: true,
+            accountStatus: true,
+            roleCode: true,
+          },
+        },
+        approvalRequest: {
+          select: {
+            requestedRoleCode: true,
+            reviewNote: true,
+            status: true,
+          },
+        },
+        profile: {
+          select: {
+            affiliation: true,
+            biography: true,
+            expertise: true,
+            institution: true,
+            nickname: true,
+            researchField: true,
+            updatedAt: true,
+            whatsapp: true,
+          },
+        },
+      },
+    });
+
+    if (!account?.access || !account.profile) {
+      return null;
+    }
+
+    return {
+      user: {
+        id: account.id,
+        email: account.email,
+        image: account.image,
+        name: account.name,
+      },
+      access: account.access,
+      approval: account.approvalRequest,
+      profile: account.profile,
+    };
+  }
+
+  async updateProfile(userId: string, input: UpdateUserProfileInput): Promise<UserProfileDetail> {
+    const profile = await prisma.userProfile.updateMany({
+      where: { userId },
+      data: input,
+    });
+    if (profile.count !== 1) {
+      throw new IdentityNotFoundError("User profile was not found");
+    }
+
+    const updated = await prisma.userProfile.findUnique({ where: { userId } });
+    if (!updated) {
+      throw new IdentityNotFoundError("User profile was not found");
+    }
+    return updated;
   }
 
   async reviewApproval(input: {

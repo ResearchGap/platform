@@ -53,6 +53,7 @@ const resolveSessionUser = async (headers: Parameters<typeof fromNodeHeaders>[0]
 
 export const authHandler = toNodeHandler(auth);
 export const identityRouter: Router = createIdentityRouter({
+  accountRepository: identityRepository,
   approvalService,
   registrationService,
   repository: identityRepository,

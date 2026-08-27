@@ -59,4 +59,45 @@ export interface ApprovalReviewResult {
   userId: string;
 }
 
+export interface UserProfileDetail {
+  affiliation: string | null;
+  biography: string | null;
+  expertise: string | null;
+  institution: string | null;
+  nickname: string | null;
+  researchField: string | null;
+  updatedAt: Date;
+  whatsapp: string | null;
+}
+
+export interface UpdateUserProfileInput {
+  affiliation?: string | null;
+  biography?: string | null;
+  expertise?: string | null;
+  institution?: string | null;
+  nickname?: string | null;
+  researchField?: string | null;
+  whatsapp?: string | null;
+}
+
+export interface CurrentAccountDetail {
+  access: {
+    accessProfileCode: AuthorizationActor["accessProfileCode"];
+    accountStatus: AuthorizationActor["accountStatus"];
+    roleCode: AuthorizationActor["roleCode"];
+  };
+  approval: {
+    requestedRoleCode: RoleCode;
+    reviewNote: string | null;
+    status: ApprovalStatus;
+  } | null;
+  profile: UserProfileDetail;
+  user: {
+    email: string;
+    id: string;
+    image: string | null;
+    name: string;
+  };
+}
+
 export type { AuthorizationActor };

@@ -45,9 +45,12 @@ export function PublicShell({ children }: { children: React.ReactNode }) {
           <nav className="hidden items-center gap-7 md:flex" aria-label="Public navigation">
             <NavigationLinks />
           </nav>
-          <div className="hidden md:block">
-            <Link href="/login" className={buttonVariants({ variant: "brand", size: "lg" })}>
-              Log in / Register
+          <div className="hidden items-center gap-2 md:flex">
+            <Link href="/login" className={buttonVariants({ variant: "ghost" })}>
+              Log in
+            </Link>
+            <Link href="/register" className={buttonVariants({ variant: "brand" })}>
+              Register
             </Link>
           </div>
           <details className="relative md:hidden">
@@ -62,9 +65,15 @@ export function PublicShell({ children }: { children: React.ReactNode }) {
                 <NavigationLinks mobile />
                 <Link
                   href="/login"
-                  className={buttonVariants({ variant: "brand", className: "mt-2 w-full" })}
+                  className={buttonVariants({ variant: "outline", className: "mt-2 w-full" })}
                 >
-                  Log in / Register
+                  Log in
+                </Link>
+                <Link
+                  href="/register"
+                  className={buttonVariants({ variant: "brand", className: "w-full" })}
+                >
+                  Register
                 </Link>
               </nav>
             </div>

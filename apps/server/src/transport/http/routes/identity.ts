@@ -8,9 +8,13 @@ import {
   IdentityNotFoundError,
   InvalidApprovalTransitionError,
 } from "../../../modules/identity/identity.errors";
-import type { IdentityAccessRepository } from "../../../modules/identity/identity.repository";
+import type {
+  CurrentAccountRepository,
+  IdentityAccessRepository,
+} from "../../../modules/identity/identity.repository";
 import type { ApprovalService } from "../../../modules/identity/approval.service";
 import type { RegistrationService } from "../../../modules/identity/registration.service";
+import { updateUserProfileSchema } from "../../../modules/identity/profile.schema";
 import { publicRegistrationSchema } from "../../../modules/identity/registration.schema";
 import { APPROVAL_DECISIONS } from "../../../modules/identity/identity.types";
 import {
@@ -33,6 +37,7 @@ function appendCookies(response: Response, cookies: readonly string[]) {
 }
 
 export function createIdentityRouter(input: {
+  accountRepository?: CurrentAccountRepository;
   approvalService: Pick<ApprovalService, "review">;
   registrationService: Pick<RegistrationService, "register">;
   repository: IdentityAccessRepository;
@@ -55,6 +60,32 @@ export function createIdentityRouter(input: {
       response.status(200).json(response.locals.actor);
     },
   );
+
+  const accountRepository = input.accountRepository;
+  if (accountRepository) {
+    router.get(
+      "/me/account",
+      authenticate,
+      async (_request, response: Response<unknown, AuthenticatedResponseLocals>) => {
+        const account = await accountRepository.findCurrentAccount(response.locals.actor.userId);
+        if (!account) {
+          throw new IdentityNotFoundError("Application account was not found");
+        }
+        response.status(200).json(account);
+      },
+    );
+
+    router.patch(
+      "/me/profile",
+      authenticate,
+      async (request, response: Response<unknown, AuthenticatedResponseLocals>) => {
+        const profile = updateUserProfileSchema.parse(request.body);
+        response
+          .status(200)
+          .json(await accountRepository.updateProfile(response.locals.actor.userId, profile));
+      },
+    );
+  }
 
   router.post(
     "/account-approvals/:approvalId/review",

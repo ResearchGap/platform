@@ -1,8 +1,7 @@
 import { buttonVariants } from "@platform/ui/components/button";
 import { ArrowDown } from "lucide-react";
+import type { Route } from "next";
 import Link from "next/link";
-
-type PublicListPath = "/bootcamps" | "/content" | "/webinars";
 
 export function LoadMoreLink({
   cursor,
@@ -10,7 +9,7 @@ export function LoadMoreLink({
   query = {},
 }: {
   cursor: string | null;
-  pathname: PublicListPath;
+  pathname: Route;
   query?: Readonly<Record<string, string | undefined>>;
 }) {
   if (!cursor) {

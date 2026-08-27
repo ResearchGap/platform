@@ -1,5 +1,11 @@
 import type { AuthorizationActor, RoleCode } from "../../authorization/authorization.types";
-import type { ApprovalDecision, ApprovalReviewResult } from "./identity.types";
+import type {
+  ApprovalDecision,
+  ApprovalReviewResult,
+  CurrentAccountDetail,
+  UpdateUserProfileInput,
+  UserProfileDetail,
+} from "./identity.types";
 
 export interface IdentityAccessRepository {
   bootstrapSuperadmin(email: string): Promise<{ email: string; userId: string }>;
@@ -12,4 +18,9 @@ export interface IdentityAccessRepository {
     reviewNote?: string;
     reviewerId: string;
   }): Promise<ApprovalReviewResult>;
+}
+
+export interface CurrentAccountRepository {
+  findCurrentAccount(userId: string): Promise<CurrentAccountDetail | null>;
+  updateProfile(userId: string, input: UpdateUserProfileInput): Promise<UserProfileDetail>;
 }
