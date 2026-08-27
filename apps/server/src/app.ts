@@ -1,6 +1,7 @@
 import { serverConfig } from "./config";
 import {
   authHandler,
+  bootcampRouter,
   checkDatabase,
   identityRouter,
   researchContentRouter,
@@ -11,6 +12,7 @@ import type { Express } from "express";
 
 export const app: Express = createHttpApp({
   authHandler,
+  bootcampRouter,
   checkDatabase,
   corsOrigin: serverConfig.corsOrigin,
   identityRouter,

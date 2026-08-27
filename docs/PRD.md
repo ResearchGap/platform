@@ -1217,104 +1217,243 @@ ResearchGap information platform operational
 
 Complete bootcamp lifecycle
 
-## **Phase 5 — Staff Operations & Dashboard**
+## **Phase 5 — Core Frontend Integration**
 
 ### **Scope**
 
-- CEO executive dashboard.
-- COO operational dashboard.
-- CMO content/dashboard.
-- Superadmin account management.
+- Establish shared frontend application shell and reusable UI components based on `style-guide.md`.
+- Authentication interface:
+  - Login.
+  - Mentee registration.
+  - Mentor registration.
+  - Staff registration.
+  - Pending approval state.
+  - Rejected account state.
+  - Suspended/disabled account state.
+
+- User profile interface.
+- Public Research Content:
+  - Content listing.
+  - Content detail.
+
+- Public Webinar:
+  - Webinar listing.
+  - Webinar detail.
+  - External registration access.
+
+- Public Bootcamp:
+  - Bootcamp listing.
+  - Bootcamp detail.
+
+- Mentee dashboard.
+- Mentee bootcamp enrollment using enrollment key.
+- My Bootcamps.
+- Bootcamp learning/session view.
+- Session resources:
+  - Module links.
+  - Pre-test/post-test.
+  - Feedback links.
+  - Recording links.
+
+- Mentor dashboard.
+- Mentor bootcamp management interface.
+- Mentor bootcamp session management interface.
+- Mentor participant view.
+- Mentor Research Content management interface.
+- Mentor Webinar management interface.
+- Loading, empty, error, and permission-denied states.
+- Responsive frontend implementation.
+
+### **Deliverable**
+
+Complete core user-facing experience for Public User, Mentee, and Mentor.
+
+---
+
+## **Phase 6 — Staff Operations & Dashboard**
+
+### **Scope**
+
+#### **CEO**
+
+- Executive dashboard.
+- Platform overview.
+- User statistics.
+- Bootcamp statistics.
+- Webinar statistics.
+- Enrollment statistics.
+- Read-only operational insights.
+
+#### **COO**
+
+- Operational dashboard.
+- Bootcamp management interface.
+- Bootcamp publication management.
+- Bootcamp session management.
+- Enrollment key management.
+- Participant and enrollment monitoring.
+- Webinar management interface.
+- Webinar publication management.
+
+#### **CMO**
+
+- Content dashboard.
+- Research Content management.
+- Research Content publication.
+- Bootcamp visual asset management.
+- Webinar visual asset management.
+- Homepage and promotional content management.
+
+#### **CTO / Superadmin**
+
+- Administrative dashboard.
 - Mentor approval interface.
 - Staff approval interface.
+- User account management.
 - Role assignment.
-- Account activation/deactivation.
-- Platform statistics.
+- Access profile management.
+- Account activation, suspension, and deactivation.
+- User permission override management where required for MVP operations.
+
+#### **Shared Staff Operations**
+
+- Permission-aware navigation and actions.
+- Role-specific dashboard content.
+- Operational status indicators.
+- Search, filtering, and pagination for administrative data.
+- Audit information for sensitive administrative actions where available.
 
 ### **Deliverable**
 
-Operational administration ready
+Complete operational administration for CEO, COO, CMO, and Superadmin.
 
-## **Phase 6 — MVP Hardening**
+---
+
+## **Phase 7 — MVP Hardening**
 
 ### **Scope**
 
-- Repository contract tests.
-- Authorization coverage tests.
-- Permission matrix tests.
-- Verify no HTTP object leaks into application services.
-- Verify no direct Supabase dependency exists in business modules.
-- Verify storage access uses FileStorage abstraction.
-- Database constraints.
+#### **Functional Validation**
+
+- Verify complete flows for:
+  - Mentee registration and authentication.
+  - Mentor registration and approval.
+  - Staff registration and approval.
+  - Account activation and access control.
+  - Research Content lifecycle.
+  - Webinar lifecycle.
+  - Bootcamp lifecycle.
+  - Enrollment key lifecycle.
+  - Mentee bootcamp enrollment.
+  - Bootcamp session and resource access.
+  - Staff operational workflows.
+
+#### **Authorization Review**
+
+- Audit route and action permissions.
+- Verify access profiles.
+- Verify role-to-access-profile mappings.
+- Verify ownership-based access restrictions.
+- Verify Superadmin access.
+- Verify pending, suspended, and disabled account restrictions.
+- Verify permission overrides where implemented.
+
+#### **Data Integrity**
+
+- Validate database constraints.
+- Validate lifecycle state transitions.
+- Verify duplicate enrollment prevention.
+- Verify enrollment key expiration and usage rules.
+- Verify publication state consistency.
+- Verify account approval consistency.
+
+#### **Security**
+
+- Input validation review.
+- Authentication and session review.
 - Rate limiting.
 - Security headers.
-- Logging.
-- Audit logging.
-- Docker build validation.
-- Docker Compose smoke test.
-- PostgreSQL backup/restore test.
-- Production configuration validation.
+- Sensitive data exposure review.
+- File upload validation where applicable.
+- External URL validation.
+- Production-safe error responses.
+
+#### **Frontend Quality**
+
+- Responsive review.
+- Accessibility review.
+- Loading-state review.
+- Empty-state review.
+- Error-state review.
+- Permission-denied state review.
+- Visual consistency with `style-guide.md`.
+- Cross-browser verification.
+
+#### **Engineering Quality**
+
+- Type checking.
+- Linting.
+- Formatting.
+- Build verification.
+- Critical automated test review.
+- Migration validation.
+- Logging review.
+- Audit logging verification.
+- Remove unused code and temporary development artifacts.
+- Documentation synchronization where required.
 
 ### **Deliverable**
 
-MVP Release Candidate with verified infrastructure portability.
+MVP Release Candidate with verified core functionality, security, authorization, data integrity, and frontend quality.
 
-## **Phase 7 — MVP Deployment**
+---
 
-Initial deployment:
-
-Next.js → Vercel  
-Express → Vercel  
-PostgreSQL → Supabase  
-Managed file storage → Supabase Storage
-
-Deployment tidak mengubah application architecture.
-
-### **Deliverable**
-
-ResearchGap MVP Production
-
-## **Phase 8 — Self-Hosting & Service Extraction Readiness (Soon when ready)**
-
-Phase ini bersifat post-MVP dan hanya dijalankan ketika terdapat kebutuhan infrastructure atau scale.
+## **Phase 8 — MVP Deployment**
 
 ### **Scope**
 
-- Deploy frontend dan backend melalui container.
-- Deploy self-hosted PostgreSQL atau managed PostgreSQL alternatif.
-- Replace Supabase Storage adapter jika diperlukan.
-- Setup Nginx/Caddy.
-- Setup automated backup.
-- Setup infrastructure monitoring.
-- Setup worker/background processing jika diperlukan.
-- Identify module boundaries yang mengalami scaling pressure.
-- Extract independent service hanya jika terdapat kebutuhan nyata.
-- Introduce gRPC untuk internal service-to-service communication ketika service extraction telah dilakukan.
+- Prepare production environment variables.
+- Provision production PostgreSQL database.
+- Apply production Prisma migrations.
+- Configure production file storage.
+- Deploy Next.js frontend.
+- Deploy Express backend.
+- Configure Better Auth production settings.
+- Configure application URLs and CORS.
+- Configure production domain and DNS.
+- Configure HTTPS.
+- Configure deployment secrets.
+- Configure logging and basic production monitoring.
+- Verify database backup capability.
+- Perform production smoke testing.
+- Verify:
+  - authentication,
+  - account approval,
+  - authorization,
+  - Research Content,
+  - Webinar,
+  - Bootcamp,
+  - enrollment,
+  - staff operations.
 
-Contoh evolution:
+- Verify `/health`.
+- Verify `/ready`.
+- Perform final production sanity check after deployment.
 
-Stage 1
+Initial MVP deployment may use:
 
-Modular Monolith  
-├── Bootcamp  
-├── Webinar  
-├── Content  
-└── Notification
+```text
+Frontend → Vercel
+Backend  → Vercel
+Database → Supabase PostgreSQL
+Storage  → Supabase Storage
+```
 
-Stage 2
+These providers remain deployment choices rather than application architecture dependencies.
 
-Main Application  
-├── Bootcamp  
-├── Webinar  
-└── Content  
- │  
- │ gRPC  
- ▼  
-Notification Service
+### **Deliverable**
 
-### **Principle**
-
-ResearchGap dipersiapkan untuk microservice extraction, tetapi tidak menggunakan microservices sebelum terdapat operational atau scalability requirement yang membenarkannya.
+ResearchGap MVP deployed and operational in the production environment.
 
 # **11\. Post-MVP Direction**
 

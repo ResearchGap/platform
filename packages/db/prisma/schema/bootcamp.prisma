@@ -1,0 +1,73 @@
+enum BootcampStatus {
+  DRAFT
+  REVIEW
+  PUBLISHED
+  COMPLETED
+  ARCHIVED
+
+  @@map("bootcamp_status")
+}
+
+enum BootcampSessionType {
+  ONLINE
+  OFFLINE
+  HYBRID
+
+  @@map("bootcamp_session_type")
+}
+
+model Bootcamp {
+  id                   String            @id @default(cuid())
+  title                String
+  slug                 String            @unique
+  description          String
+  whatYouGet           String?           @map("what_you_get")
+  startDate            DateTime          @map("start_date") @db.Timestamptz(3)
+  endDate              DateTime          @map("end_date") @db.Timestamptz(3)
+  registrationDeadline DateTime?         @map("registration_deadline") @db.Timestamptz(3)
+  coverAssetId         String?           @map("cover_asset_id")
+  status               BootcampStatus    @default(DRAFT)
+  createdById          String            @map("created_by_id")
+  publishedById        String?           @map("published_by_id")
+  publishedAt          DateTime?         @map("published_at") @db.Timestamptz(3)
+  createdAt            DateTime          @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt            DateTime          @updatedAt @map("updated_at") @db.Timestamptz(3)
+  createdBy            User              @relation("BootcampCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  publishedBy          User?             @relation("BootcampPublisher", fields: [publishedById], references: [id], onDelete: SetNull)
+  coverAsset           MediaAsset?       @relation(fields: [coverAssetId], references: [id], onDelete: SetNull)
+  sessions             BootcampSession[]
+
+  @@index([createdById, createdAt, id])
+  @@index([publishedById])
+  @@index([coverAssetId])
+  @@index([status, startDate, id])
+  @@index([status, endDate, id])
+  @@map("bootcamps")
+}
+
+model BootcampSession {
+  id           String              @id @default(cuid())
+  bootcampId   String              @map("bootcamp_id")
+  title        String
+  description  String?
+  speakerName  String?             @map("speaker_name")
+  scheduledAt  DateTime            @map("scheduled_at") @db.Timestamptz(3)
+  sessionType  BootcampSessionType @map("session_type")
+  venue        String?
+  moduleUrl    String?             @map("module_url")
+  preTestUrl   String?             @map("pre_test_url")
+  postTestUrl  String?             @map("post_test_url")
+  feedbackUrl  String?             @map("feedback_url")
+  recordingUrl String?             @map("recording_url")
+  coverAssetId String?             @map("cover_asset_id")
+  sortOrder    Int                 @map("sort_order")
+  createdAt    DateTime            @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt    DateTime            @updatedAt @map("updated_at") @db.Timestamptz(3)
+  bootcamp     Bootcamp            @relation(fields: [bootcampId], references: [id], onDelete: Cascade)
+  coverAsset   MediaAsset?         @relation(fields: [coverAssetId], references: [id], onDelete: SetNull)
+
+  @@unique([bootcampId, sortOrder])
+  @@index([bootcampId, scheduledAt, id])
+  @@index([coverAssetId])
+  @@map("bootcamp_sessions")
+}

@@ -3,6 +3,8 @@ export const PERMISSIONS = {
   BOOTCAMP_CREATE: "bootcamp.create",
   BOOTCAMP_UPDATE: "bootcamp.update",
   BOOTCAMP_PUBLISH: "bootcamp.publish",
+  BOOTCAMP_MANAGE_ALL: "bootcamp.manage-all",
+  BOOTCAMP_MANAGE_SESSIONS: "bootcamp.session.manage",
   BOOTCAMP_MANAGE_ENROLLMENT: "bootcamp.enrollment.manage",
   WEBINAR_READ: "webinar.read",
   WEBINAR_CREATE: "webinar.create",

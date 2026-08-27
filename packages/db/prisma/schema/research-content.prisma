@@ -33,6 +33,8 @@ model MediaAsset {
   createdBy       User?             @relation("MediaAssetCreator", fields: [createdById], references: [id], onDelete: SetNull)
   contentCoverFor ResearchContent[]
   webinarCoverFor Webinar[]
+  bootcampCoverFor Bootcamp[]
+  sessionCoverFor BootcampSession[]
 
   @@index([createdById])
   @@map("media_assets")

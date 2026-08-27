@@ -3,6 +3,7 @@ import express, { type Express, type RequestHandler, type Router } from "express
 
 interface HttpAppDependencies {
   authHandler: RequestHandler;
+  bootcampRouter?: Router;
   checkDatabase: () => Promise<void>;
   corsOrigin: string;
   identityRouter?: Router;
@@ -12,6 +13,7 @@ interface HttpAppDependencies {
 
 export function createHttpApp({
   authHandler,
+  bootcampRouter,
   checkDatabase,
   corsOrigin,
   identityRouter,
@@ -23,7 +25,7 @@ export function createHttpApp({
   app.use(
     cors({
       origin: corsOrigin,
-      methods: ["GET", "POST", "PATCH", "OPTIONS"],
+      methods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
       allowedHeaders: ["Content-Type", "Authorization"],
       credentials: true,
     }),
@@ -33,6 +35,9 @@ export function createHttpApp({
 
   app.use(express.json());
 
+  if (bootcampRouter) {
+    app.use("/api", bootcampRouter);
+  }
   if (identityRouter) {
     app.use("/api", identityRouter);
   }

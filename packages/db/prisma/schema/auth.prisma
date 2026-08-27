@@ -19,6 +19,8 @@ model User {
   researchContentPublished   ResearchContent[]         @relation("ResearchContentPublisher")
   webinarsCreated            Webinar[]                 @relation("WebinarCreator")
   webinarsPublished          Webinar[]                 @relation("WebinarPublisher")
+  bootcampsCreated            Bootcamp[]                @relation("BootcampCreator")
+  bootcampsPublished          Bootcamp[]                @relation("BootcampPublisher")
 
   @@unique([email])
   @@map("user")
