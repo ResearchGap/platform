@@ -8,13 +8,16 @@ import { RegistrationService } from "./modules/identity/registration.service";
 import { BetterAuthIdentityProvider } from "./infrastructure/auth/better-auth-identity";
 import { PrismaIdentityRepository } from "./infrastructure/database/prisma-identity.repository";
 import { PrismaBootcampRepository } from "./infrastructure/database/prisma-bootcamp.repository";
+import { PrismaEnrollmentRepository } from "./infrastructure/database/prisma-enrollment.repository";
 import { PrismaResearchContentRepository } from "./infrastructure/database/prisma-research-content.repository";
 import { PrismaWebinarRepository } from "./infrastructure/database/prisma-webinar.repository";
 import { ResearchContentService } from "./modules/content/content.service";
 import { BootcampService } from "./modules/bootcamp/bootcamp.service";
+import { EnrollmentService } from "./modules/enrollment/enrollment.service";
 import { WebinarService } from "./modules/webinar/webinar.service";
 import { createIdentityRouter } from "./transport/http/routes/identity";
 import { createBootcampRouter } from "./transport/http/routes/bootcamp";
+import { createEnrollmentRouter } from "./transport/http/routes/enrollment";
 import { createResearchContentRouter } from "./transport/http/routes/content";
 import { createWebinarRouter } from "./transport/http/routes/webinar";
 
@@ -36,6 +39,8 @@ const registrationService = new RegistrationService(identityProvider, identityRe
 const approvalService = new ApprovalService(identityRepository);
 const bootcampRepository = new PrismaBootcampRepository();
 const bootcampService = new BootcampService(bootcampRepository);
+const enrollmentRepository = new PrismaEnrollmentRepository();
+const enrollmentService = new EnrollmentService(enrollmentRepository);
 const contentRepository = new PrismaResearchContentRepository();
 const contentService = new ResearchContentService(contentRepository);
 const webinarRepository = new PrismaWebinarRepository();
@@ -55,6 +60,11 @@ export const identityRouter: Router = createIdentityRouter({
 });
 export const bootcampRouter: Router = createBootcampRouter({
   bootcampService,
+  identityRepository,
+  resolveSessionUser,
+});
+export const enrollmentRouter: Router = createEnrollmentRouter({
+  enrollmentService,
   identityRepository,
   resolveSessionUser,
 });

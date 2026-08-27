@@ -36,6 +36,9 @@ model Bootcamp {
   publishedBy          User?             @relation("BootcampPublisher", fields: [publishedById], references: [id], onDelete: SetNull)
   coverAsset           MediaAsset?       @relation(fields: [coverAssetId], references: [id], onDelete: SetNull)
   sessions             BootcampSession[]
+  enrollmentKeys       EnrollmentKey[]
+  enrollments          BootcampEnrollment[]
+  mentors              BootcampMentor[]
 
   @@index([createdById, createdAt, id])
   @@index([publishedById])

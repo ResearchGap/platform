@@ -1,0 +1,100 @@
+enum EnrollmentKeyAudience {
+  MENTEE
+  MENTOR
+
+  @@map("enrollment_key_audience")
+}
+
+enum EnrollmentKeyStatus {
+  ACTIVE
+  INACTIVE
+  EXPIRED
+
+  @@map("enrollment_key_status")
+}
+
+enum BootcampEnrollmentStatus {
+  ACTIVE
+  COMPLETED
+  CANCELLED
+
+  @@map("bootcamp_enrollment_status")
+}
+
+enum BootcampMentorAssignmentSource {
+  CREATOR
+  SELF_ENROLLED
+  STAFF_ASSIGNED
+
+  @@map("bootcamp_mentor_assignment_source")
+}
+
+enum BootcampMentorStatus {
+  ACTIVE
+  INACTIVE
+
+  @@map("bootcamp_mentor_status")
+}
+
+model EnrollmentKey {
+  id                String                @id @default(cuid())
+  bootcampId        String                @map("bootcamp_id")
+  codeHash          String                @unique @map("code_hash")
+  keyHint           String?               @map("key_hint")
+  audience          EnrollmentKeyAudience
+  status            EnrollmentKeyStatus   @default(ACTIVE)
+  expiresAt         DateTime?             @map("expires_at") @db.Timestamptz(3)
+  maxUses           Int?                  @map("max_uses")
+  usageCount        Int                   @default(0) @map("usage_count")
+  createdById       String                @map("created_by_id")
+  createdAt         DateTime              @default(now()) @map("created_at") @db.Timestamptz(3)
+  bootcamp          Bootcamp              @relation(fields: [bootcampId], references: [id], onDelete: Cascade)
+  createdBy         User                  @relation("EnrollmentKeyCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  menteeEnrollments BootcampEnrollment[]
+  mentorAssignments BootcampMentor[]
+
+  @@index([bootcampId, audience, status, createdAt, id])
+  @@index([createdById])
+  @@map("enrollment_keys")
+}
+
+model BootcampEnrollment {
+  id              String                     @id @default(cuid())
+  bootcampId      String                     @map("bootcamp_id")
+  menteeId        String                     @map("mentee_id")
+  enrollmentKeyId String                     @map("enrollment_key_id")
+  status          BootcampEnrollmentStatus   @default(ACTIVE)
+  enrolledAt      DateTime                   @default(now()) @map("enrolled_at") @db.Timestamptz(3)
+  bootcamp        Bootcamp                   @relation(fields: [bootcampId], references: [id], onDelete: Cascade)
+  mentee          User                       @relation("MenteeBootcampEnrollment", fields: [menteeId], references: [id], onDelete: Cascade)
+  enrollmentKey   EnrollmentKey              @relation(fields: [enrollmentKeyId], references: [id], onDelete: Restrict)
+
+  @@unique([bootcampId, menteeId])
+  @@index([menteeId, status, enrolledAt, id])
+  @@index([bootcampId, status, enrolledAt, id])
+  @@index([enrollmentKeyId])
+  @@map("bootcamp_enrollments")
+}
+
+model BootcampMentor {
+  id               String                             @id @default(cuid())
+  bootcampId       String                             @map("bootcamp_id")
+  mentorId         String                             @map("mentor_id")
+  assignmentSource BootcampMentorAssignmentSource     @map("assignment_source")
+  enrollmentKeyId  String?                            @map("enrollment_key_id")
+  assignedById     String?                            @map("assigned_by_id")
+  status           BootcampMentorStatus               @default(ACTIVE)
+  assignedAt       DateTime                           @default(now()) @map("assigned_at") @db.Timestamptz(3)
+  updatedAt        DateTime                           @updatedAt @map("updated_at") @db.Timestamptz(3)
+  bootcamp         Bootcamp                           @relation(fields: [bootcampId], references: [id], onDelete: Cascade)
+  mentor           User                               @relation("BootcampMentorUser", fields: [mentorId], references: [id], onDelete: Cascade)
+  enrollmentKey    EnrollmentKey?                     @relation(fields: [enrollmentKeyId], references: [id], onDelete: Restrict)
+  assignedBy       User?                              @relation("BootcampMentorAssigner", fields: [assignedById], references: [id], onDelete: SetNull)
+
+  @@unique([bootcampId, mentorId])
+  @@index([mentorId, status, assignedAt, id])
+  @@index([bootcampId, status, assignedAt, id])
+  @@index([enrollmentKeyId])
+  @@index([assignedById])
+  @@map("bootcamp_mentors")
+}

@@ -77,13 +77,17 @@ export class BootcampService {
       await this.assertCoverExists(input.coverAssetId);
     }
     await this.assertSlugAvailable(input.slug);
-    return this.repository.create({ ...input, createdById: actor.userId });
+    return this.repository.create({
+      ...input,
+      createdById: actor.userId,
+      assignCreatorAsMentor: can(actor, PERMISSIONS.BOOTCAMP_MENTOR_JOIN),
+    });
   }
 
   async update(actor: AuthorizationActor, id: string, input: UpdateBootcampInput) {
     authorize(actor, PERMISSIONS.BOOTCAMP_UPDATE);
     const current = await this.getRequired(id);
-    this.assertMutable(actor, current);
+    await this.assertMutable(actor, current);
 
     const startDate = input.startDate ?? current.startDate;
     const endDate = input.endDate ?? current.endDate;
@@ -116,7 +120,7 @@ export class BootcampService {
   async getById(actor: AuthorizationActor, id: string) {
     authorize(actor, PERMISSIONS.BOOTCAMP_READ);
     const bootcamp = await this.getRequired(id);
-    if (!this.isPublic(bootcamp) && !this.canManage(actor, bootcamp)) {
+    if (!this.isPublic(bootcamp) && !(await this.canManage(actor, bootcamp))) {
       throw new AuthorizationError();
     }
     return bootcamp;
@@ -134,7 +138,7 @@ export class BootcampService {
     authorize(actor, PERMISSIONS.BOOTCAMP_READ);
     return this.repository.list({
       ...input,
-      createdById: can(actor, PERMISSIONS.BOOTCAMP_MANAGE_ALL) ? undefined : actor.userId,
+      actorUserId: can(actor, PERMISSIONS.BOOTCAMP_MANAGE_ALL) ? undefined : actor.userId,
     });
   }
 
@@ -146,7 +150,7 @@ export class BootcampService {
   async submit(actor: AuthorizationActor, id: string) {
     authorize(actor, PERMISSIONS.BOOTCAMP_UPDATE);
     const current = await this.getRequired(id);
-    this.assertCanManage(actor, current);
+    await this.assertCanManage(actor, current);
     if (current.status !== BOOTCAMP_STATUSES.DRAFT) {
       throw new InvalidBootcampTransitionError(current.status, BOOTCAMP_STATUSES.REVIEW);
     }
@@ -156,7 +160,7 @@ export class BootcampService {
   async publish(actor: AuthorizationActor, id: string) {
     authorize(actor, PERMISSIONS.BOOTCAMP_PUBLISH);
     const current = await this.getRequired(id);
-    this.assertCanManage(actor, current);
+    await this.assertCanManage(actor, current);
     if (current.status !== BOOTCAMP_STATUSES.REVIEW) {
       throw new InvalidBootcampTransitionError(current.status, BOOTCAMP_STATUSES.PUBLISHED);
     }
@@ -180,7 +184,7 @@ export class BootcampService {
   async complete(actor: AuthorizationActor, id: string) {
     authorize(actor, PERMISSIONS.BOOTCAMP_PUBLISH);
     const current = await this.getRequired(id);
-    this.assertCanManage(actor, current);
+    await this.assertCanManage(actor, current);
     if (current.status !== BOOTCAMP_STATUSES.PUBLISHED) {
       throw new InvalidBootcampTransitionError(current.status, BOOTCAMP_STATUSES.COMPLETED);
     }
@@ -193,7 +197,7 @@ export class BootcampService {
   async archive(actor: AuthorizationActor, id: string) {
     authorize(actor, PERMISSIONS.BOOTCAMP_PUBLISH);
     const current = await this.getRequired(id);
-    this.assertCanManage(actor, current);
+    await this.assertCanManage(actor, current);
     if (current.status === BOOTCAMP_STATUSES.ARCHIVED) {
       throw new InvalidBootcampTransitionError(current.status, BOOTCAMP_STATUSES.ARCHIVED);
     }
@@ -233,14 +237,14 @@ export class BootcampService {
   async getSession(actor: AuthorizationActor, bootcampId: string, sessionId: string) {
     authorize(actor, PERMISSIONS.BOOTCAMP_MANAGE_SESSIONS);
     const bootcamp = await this.getRequired(bootcampId);
-    this.assertCanManage(actor, bootcamp);
+    await this.assertCanManage(actor, bootcamp);
     return this.getRequiredSession(bootcampId, sessionId);
   }
 
   async listSessions(actor: AuthorizationActor, bootcampId: string) {
     authorize(actor, PERMISSIONS.BOOTCAMP_MANAGE_SESSIONS);
     const bootcamp = await this.getRequired(bootcampId);
-    this.assertCanManage(actor, bootcamp);
+    await this.assertCanManage(actor, bootcamp);
     return this.repository.listSessions(bootcampId);
   }
 
@@ -294,7 +298,7 @@ export class BootcampService {
   private async getSessionMutableBootcamp(actor: AuthorizationActor, bootcampId: string) {
     authorize(actor, PERMISSIONS.BOOTCAMP_MANAGE_SESSIONS);
     const bootcamp = await this.getRequired(bootcampId);
-    this.assertMutable(actor, bootcamp);
+    await this.assertMutable(actor, bootcamp);
     return bootcamp;
   }
 
@@ -305,18 +309,22 @@ export class BootcampService {
     );
   }
 
-  private canManage(actor: AuthorizationActor, bootcamp: BootcampDetail) {
-    return bootcamp.createdById === actor.userId || can(actor, PERMISSIONS.BOOTCAMP_MANAGE_ALL);
+  private async canManage(actor: AuthorizationActor, bootcamp: BootcampDetail) {
+    return (
+      bootcamp.createdById === actor.userId ||
+      can(actor, PERMISSIONS.BOOTCAMP_MANAGE_ALL) ||
+      (await this.repository.isActiveMentor(bootcamp.id, actor.userId))
+    );
   }
 
-  private assertCanManage(actor: AuthorizationActor, bootcamp: BootcampDetail) {
-    if (!this.canManage(actor, bootcamp)) {
+  private async assertCanManage(actor: AuthorizationActor, bootcamp: BootcampDetail) {
+    if (!(await this.canManage(actor, bootcamp))) {
       throw new AuthorizationError();
     }
   }
 
-  private assertMutable(actor: AuthorizationActor, bootcamp: BootcampDetail) {
-    this.assertCanManage(actor, bootcamp);
+  private async assertMutable(actor: AuthorizationActor, bootcamp: BootcampDetail) {
+    await this.assertCanManage(actor, bootcamp);
     if (
       bootcamp.status === BOOTCAMP_STATUSES.COMPLETED ||
       bootcamp.status === BOOTCAMP_STATUSES.ARCHIVED

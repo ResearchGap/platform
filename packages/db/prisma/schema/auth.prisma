@@ -21,6 +21,10 @@ model User {
   webinarsPublished          Webinar[]                 @relation("WebinarPublisher")
   bootcampsCreated            Bootcamp[]                @relation("BootcampCreator")
   bootcampsPublished          Bootcamp[]                @relation("BootcampPublisher")
+  enrollmentKeysCreated       EnrollmentKey[]            @relation("EnrollmentKeyCreator")
+  bootcampEnrollments         BootcampEnrollment[]       @relation("MenteeBootcampEnrollment")
+  bootcampMentorAssignments   BootcampMentor[]           @relation("BootcampMentorUser")
+  bootcampMentorsAssigned     BootcampMentor[]           @relation("BootcampMentorAssigner")
 
   @@unique([email])
   @@map("user")

@@ -206,7 +206,9 @@ export class PrismaBootcampRepository implements BootcampRepository {
     return (await prisma.mediaAsset.count({ where: { id } })) === 1;
   }
 
-  async create(input: CreateBootcampInput & { createdById: string }): Promise<BootcampDetail> {
+  async create(
+    input: CreateBootcampInput & { assignCreatorAsMentor: boolean; createdById: string },
+  ): Promise<BootcampDetail> {
     try {
       const record = await prisma.bootcamp.create({
         data: {
@@ -219,6 +221,16 @@ export class PrismaBootcampRepository implements BootcampRepository {
           registrationDeadline: input.registrationDeadline,
           coverAssetId: input.coverAssetId,
           createdById: input.createdById,
+          ...(input.assignCreatorAsMentor
+            ? {
+                mentors: {
+                  create: {
+                    mentorId: input.createdById,
+                    assignmentSource: "CREATOR",
+                  },
+                },
+              }
+            : {}),
         },
         select: bootcampDetailSelect,
       });
@@ -259,12 +271,31 @@ export class PrismaBootcampRepository implements BootcampRepository {
     return record ? toDetail(record) : null;
   }
 
+  async isActiveMentor(bootcampId: string, userId: string): Promise<boolean> {
+    return (
+      (await prisma.bootcampMentor.count({
+        where: { bootcampId, mentorId: userId, status: "ACTIVE" },
+      })) === 1
+    );
+  }
+
   async list(
-    input: BootcampListInput & { createdById?: string },
+    input: BootcampListInput & { actorUserId?: string },
   ): Promise<BootcampPage<BootcampSummary>> {
     const records = await prisma.bootcamp.findMany({
       where: {
-        ...(input.createdById ? { createdById: input.createdById } : {}),
+        ...(input.actorUserId
+          ? {
+              OR: [
+                { createdById: input.actorUserId },
+                {
+                  mentors: {
+                    some: { mentorId: input.actorUserId, status: "ACTIVE" as const },
+                  },
+                },
+              ],
+            }
+          : {}),
         ...(input.status ? { status: input.status } : {}),
         ...timingFilter(input, new Date()),
       },

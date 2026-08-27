@@ -13,7 +13,9 @@ import type {
 
 export interface BootcampRepository {
   coverAssetExists(id: string): Promise<boolean>;
-  create(input: CreateBootcampInput & { createdById: string }): Promise<BootcampDetail>;
+  create(
+    input: CreateBootcampInput & { assignCreatorAsMentor: boolean; createdById: string },
+  ): Promise<BootcampDetail>;
   createSession(
     bootcampId: string,
     input: CreateBootcampSessionInput,
@@ -23,7 +25,8 @@ export interface BootcampRepository {
   findBySlug(slug: string): Promise<BootcampDetail | null>;
   findPublicBySlug(slug: string): Promise<BootcampDetail | null>;
   findSession(bootcampId: string, sessionId: string): Promise<BootcampSessionDetail | null>;
-  list(input: BootcampListInput & { createdById?: string }): Promise<BootcampPage<BootcampSummary>>;
+  isActiveMentor(bootcampId: string, userId: string): Promise<boolean>;
+  list(input: BootcampListInput & { actorUserId?: string }): Promise<BootcampPage<BootcampSummary>>;
   listPublic(input: Omit<BootcampListInput, "status">): Promise<BootcampPage<BootcampSummary>>;
   listSessions(bootcampId: string): Promise<BootcampSessionDetail[]>;
   reorderSessions(bootcampId: string, sessionIds: string[]): Promise<BootcampSessionDetail[]>;

@@ -6,6 +6,7 @@ interface HttpAppDependencies {
   bootcampRouter?: Router;
   checkDatabase: () => Promise<void>;
   corsOrigin: string;
+  enrollmentRouter?: Router;
   identityRouter?: Router;
   researchContentRouter?: Router;
   webinarRouter?: Router;
@@ -16,6 +17,7 @@ export function createHttpApp({
   bootcampRouter,
   checkDatabase,
   corsOrigin,
+  enrollmentRouter,
   identityRouter,
   researchContentRouter,
   webinarRouter,
@@ -40,6 +42,9 @@ export function createHttpApp({
   }
   if (identityRouter) {
     app.use("/api", identityRouter);
+  }
+  if (enrollmentRouter) {
+    app.use("/api", enrollmentRouter);
   }
   if (researchContentRouter) {
     app.use("/api", researchContentRouter);
