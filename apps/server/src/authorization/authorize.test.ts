@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
+import { RESOURCE_SCOPES, RESOURCE_TYPES } from "./access-profiles";
 import {
   ACCESS_PROFILE_CODES,
   ACCOUNT_STATUSES,
@@ -7,7 +8,7 @@ import {
   ROLES,
   type AuthorizationActor,
 } from "./authorization.types";
-import { can } from "./authorize";
+import { AuthorizationError, authorizeResource, can } from "./authorize";
 import { PERMISSIONS } from "./permissions";
 
 function actor(overrides: Partial<AuthorizationActor> = {}): AuthorizationActor {
@@ -109,5 +110,28 @@ describe("authorization", () => {
         new Date("2021-01-01T00:00:00Z"),
       ),
     ).toBe(false);
+  });
+
+  test("resolves Bootcamp scope from the access profile", () => {
+    expect(authorizeResource(actor(), PERMISSIONS.BOOTCAMP_READ, RESOURCE_TYPES.BOOTCAMP)).toBe(
+      RESOURCE_SCOPES.ENROLLED,
+    );
+    expect(
+      authorizeResource(
+        actor({ accessProfileCode: ACCESS_PROFILE_CODES.MENTOR_DEFAULT }),
+        PERMISSIONS.BOOTCAMP_UPDATE,
+        RESOURCE_TYPES.BOOTCAMP,
+      ),
+    ).toBe(RESOURCE_SCOPES.ASSIGNED);
+  });
+
+  test("does not let ALL scope grant a missing capability", () => {
+    expect(() =>
+      authorizeResource(
+        actor({ accessProfileCode: ACCESS_PROFILE_CODES.EXECUTIVE_READ }),
+        PERMISSIONS.BOOTCAMP_PUBLISH,
+        RESOURCE_TYPES.BOOTCAMP,
+      ),
+    ).toThrow(AuthorizationError);
   });
 });

@@ -1,4 +1,9 @@
-import { AuthorizationError, authorize, can } from "../../authorization/authorize";
+import {
+  RESOURCE_SCOPES,
+  RESOURCE_TYPES,
+  type ResourceScope,
+} from "../../authorization/access-profiles";
+import { AuthorizationError, authorizeResource } from "../../authorization/authorize";
 import type { AuthorizationActor } from "../../authorization/authorization.types";
 import { PERMISSIONS } from "../../authorization/permissions";
 import {
@@ -24,7 +29,7 @@ export class WebinarService {
   ) {}
 
   async create(actor: AuthorizationActor, input: CreateWebinarInput) {
-    authorize(actor, PERMISSIONS.WEBINAR_CREATE);
+    authorizeResource(actor, PERMISSIONS.WEBINAR_CREATE, RESOURCE_TYPES.WEBINAR);
     if (input.coverAssetId) {
       await this.assertCoverExists(input.coverAssetId);
     }
@@ -34,9 +39,9 @@ export class WebinarService {
   }
 
   async update(actor: AuthorizationActor, id: string, input: UpdateWebinarInput) {
-    authorize(actor, PERMISSIONS.WEBINAR_UPDATE);
+    const scope = authorizeResource(actor, PERMISSIONS.WEBINAR_UPDATE, RESOURCE_TYPES.WEBINAR);
     const current = await this.getRequired(id);
-    this.assertCanManage(actor, current);
+    this.assertCanManage(actor, current, scope);
     if (
       current.status === WEBINAR_STATUSES.COMPLETED ||
       current.status === WEBINAR_STATUSES.ARCHIVED
@@ -54,9 +59,9 @@ export class WebinarService {
   }
 
   async getById(actor: AuthorizationActor, id: string) {
-    authorize(actor, PERMISSIONS.WEBINAR_READ);
+    const scope = authorizeResource(actor, PERMISSIONS.WEBINAR_READ, RESOURCE_TYPES.WEBINAR);
     const webinar = await this.getRequired(id);
-    if (!this.isPublic(webinar) && !this.canManage(actor, webinar)) {
+    if (!this.isPublic(webinar) && !this.canManage(actor, webinar, scope)) {
       throw new AuthorizationError();
     }
     return webinar;
@@ -71,10 +76,10 @@ export class WebinarService {
   }
 
   async list(actor: AuthorizationActor, input: WebinarListInput) {
-    authorize(actor, PERMISSIONS.WEBINAR_READ);
+    const scope = authorizeResource(actor, PERMISSIONS.WEBINAR_READ, RESOURCE_TYPES.WEBINAR);
     return this.repository.list({
       ...input,
-      createdById: can(actor, PERMISSIONS.WEBINAR_MANAGE_ALL) ? undefined : actor.userId,
+      createdById: scope === RESOURCE_SCOPES.ALL ? undefined : actor.userId,
     });
   }
 
@@ -83,9 +88,9 @@ export class WebinarService {
   }
 
   async publish(actor: AuthorizationActor, id: string) {
-    authorize(actor, PERMISSIONS.WEBINAR_PUBLISH);
+    const scope = authorizeResource(actor, PERMISSIONS.WEBINAR_PUBLISH, RESOURCE_TYPES.WEBINAR);
     const current = await this.getRequired(id);
-    this.assertCanManage(actor, current);
+    this.assertCanManage(actor, current, scope);
     if (current.status !== WEBINAR_STATUSES.DRAFT) {
       throw new InvalidWebinarTransitionError(current.status, WEBINAR_STATUSES.PUBLISHED);
     }
@@ -104,9 +109,9 @@ export class WebinarService {
   }
 
   async complete(actor: AuthorizationActor, id: string) {
-    authorize(actor, PERMISSIONS.WEBINAR_PUBLISH);
+    const scope = authorizeResource(actor, PERMISSIONS.WEBINAR_PUBLISH, RESOURCE_TYPES.WEBINAR);
     const current = await this.getRequired(id);
-    this.assertCanManage(actor, current);
+    this.assertCanManage(actor, current, scope);
     if (current.status !== WEBINAR_STATUSES.PUBLISHED) {
       throw new InvalidWebinarTransitionError(current.status, WEBINAR_STATUSES.COMPLETED);
     }
@@ -129,9 +134,9 @@ export class WebinarService {
   }
 
   async archive(actor: AuthorizationActor, id: string) {
-    authorize(actor, PERMISSIONS.WEBINAR_PUBLISH);
+    const scope = authorizeResource(actor, PERMISSIONS.WEBINAR_PUBLISH, RESOURCE_TYPES.WEBINAR);
     const current = await this.getRequired(id);
-    this.assertCanManage(actor, current);
+    this.assertCanManage(actor, current, scope);
     if (current.status === WEBINAR_STATUSES.ARCHIVED) {
       throw new InvalidWebinarTransitionError(current.status, WEBINAR_STATUSES.ARCHIVED);
     }
@@ -161,12 +166,15 @@ export class WebinarService {
     );
   }
 
-  private canManage(actor: AuthorizationActor, webinar: WebinarDetail) {
-    return webinar.createdById === actor.userId || can(actor, PERMISSIONS.WEBINAR_MANAGE_ALL);
+  private canManage(actor: AuthorizationActor, webinar: WebinarDetail, scope: ResourceScope) {
+    return (
+      scope === RESOURCE_SCOPES.ALL ||
+      (scope === RESOURCE_SCOPES.OWNED && webinar.createdById === actor.userId)
+    );
   }
 
-  private assertCanManage(actor: AuthorizationActor, webinar: WebinarDetail) {
-    if (!this.canManage(actor, webinar)) {
+  private assertCanManage(actor: AuthorizationActor, webinar: WebinarDetail, scope: ResourceScope) {
+    if (!this.canManage(actor, webinar, scope)) {
       throw new AuthorizationError();
     }
   }

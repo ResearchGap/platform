@@ -1,4 +1,9 @@
-import { AuthorizationError, authorize, can } from "../../authorization/authorize";
+import {
+  RESOURCE_SCOPES,
+  RESOURCE_TYPES,
+  type ResourceScope,
+} from "../../authorization/access-profiles";
+import { AuthorizationError, authorizeResource } from "../../authorization/authorize";
 import type { AuthorizationActor } from "../../authorization/authorization.types";
 import { PERMISSIONS } from "../../authorization/permissions";
 import {
@@ -71,7 +76,7 @@ export class BootcampService {
   ) {}
 
   async create(actor: AuthorizationActor, input: CreateBootcampInput) {
-    authorize(actor, PERMISSIONS.BOOTCAMP_CREATE);
+    const scope = authorizeResource(actor, PERMISSIONS.BOOTCAMP_CREATE, RESOURCE_TYPES.BOOTCAMP);
     this.assertDateRange(input.startDate, input.endDate, input.registrationDeadline ?? null);
     if (input.coverAssetId) {
       await this.assertCoverExists(input.coverAssetId);
@@ -80,14 +85,14 @@ export class BootcampService {
     return this.repository.create({
       ...input,
       createdById: actor.userId,
-      assignCreatorAsMentor: can(actor, PERMISSIONS.BOOTCAMP_MENTOR_JOIN),
+      assignCreatorAsMentor: scope === RESOURCE_SCOPES.ASSIGNED,
     });
   }
 
   async update(actor: AuthorizationActor, id: string, input: UpdateBootcampInput) {
-    authorize(actor, PERMISSIONS.BOOTCAMP_UPDATE);
+    const scope = authorizeResource(actor, PERMISSIONS.BOOTCAMP_UPDATE, RESOURCE_TYPES.BOOTCAMP);
     const current = await this.getRequired(id);
-    await this.assertMutable(actor, current);
+    await this.assertMutable(actor, current, scope);
 
     const startDate = input.startDate ?? current.startDate;
     const endDate = input.endDate ?? current.endDate;
@@ -118,9 +123,9 @@ export class BootcampService {
   }
 
   async getById(actor: AuthorizationActor, id: string) {
-    authorize(actor, PERMISSIONS.BOOTCAMP_READ);
+    const scope = authorizeResource(actor, PERMISSIONS.BOOTCAMP_READ, RESOURCE_TYPES.BOOTCAMP);
     const bootcamp = await this.getRequired(id);
-    if (!this.isPublic(bootcamp) && !(await this.canManage(actor, bootcamp))) {
+    if (!this.isPublic(bootcamp) && !(await this.hasResourceScope(actor, bootcamp, scope))) {
       throw new AuthorizationError();
     }
     return bootcamp;
@@ -135,10 +140,11 @@ export class BootcampService {
   }
 
   async list(actor: AuthorizationActor, input: BootcampListInput) {
-    authorize(actor, PERMISSIONS.BOOTCAMP_READ);
+    const scope = authorizeResource(actor, PERMISSIONS.BOOTCAMP_READ, RESOURCE_TYPES.BOOTCAMP);
     return this.repository.list({
       ...input,
-      actorUserId: can(actor, PERMISSIONS.BOOTCAMP_MANAGE_ALL) ? undefined : actor.userId,
+      actorUserId: scope === RESOURCE_SCOPES.ALL ? undefined : actor.userId,
+      resourceScope: scope,
     });
   }
 
@@ -148,9 +154,9 @@ export class BootcampService {
   }
 
   async submit(actor: AuthorizationActor, id: string) {
-    authorize(actor, PERMISSIONS.BOOTCAMP_UPDATE);
+    const scope = authorizeResource(actor, PERMISSIONS.BOOTCAMP_UPDATE, RESOURCE_TYPES.BOOTCAMP);
     const current = await this.getRequired(id);
-    await this.assertCanManage(actor, current);
+    await this.assertCanManage(actor, current, scope);
     if (current.status !== BOOTCAMP_STATUSES.DRAFT) {
       throw new InvalidBootcampTransitionError(current.status, BOOTCAMP_STATUSES.REVIEW);
     }
@@ -158,9 +164,9 @@ export class BootcampService {
   }
 
   async publish(actor: AuthorizationActor, id: string) {
-    authorize(actor, PERMISSIONS.BOOTCAMP_PUBLISH);
+    const scope = authorizeResource(actor, PERMISSIONS.BOOTCAMP_PUBLISH, RESOURCE_TYPES.BOOTCAMP);
     const current = await this.getRequired(id);
-    await this.assertCanManage(actor, current);
+    await this.assertCanManage(actor, current, scope);
     if (current.status !== BOOTCAMP_STATUSES.REVIEW) {
       throw new InvalidBootcampTransitionError(current.status, BOOTCAMP_STATUSES.PUBLISHED);
     }
@@ -182,9 +188,9 @@ export class BootcampService {
   }
 
   async complete(actor: AuthorizationActor, id: string) {
-    authorize(actor, PERMISSIONS.BOOTCAMP_PUBLISH);
+    const scope = authorizeResource(actor, PERMISSIONS.BOOTCAMP_PUBLISH, RESOURCE_TYPES.BOOTCAMP);
     const current = await this.getRequired(id);
-    await this.assertCanManage(actor, current);
+    await this.assertCanManage(actor, current, scope);
     if (current.status !== BOOTCAMP_STATUSES.PUBLISHED) {
       throw new InvalidBootcampTransitionError(current.status, BOOTCAMP_STATUSES.COMPLETED);
     }
@@ -195,9 +201,9 @@ export class BootcampService {
   }
 
   async archive(actor: AuthorizationActor, id: string) {
-    authorize(actor, PERMISSIONS.BOOTCAMP_PUBLISH);
+    const scope = authorizeResource(actor, PERMISSIONS.BOOTCAMP_PUBLISH, RESOURCE_TYPES.BOOTCAMP);
     const current = await this.getRequired(id);
-    await this.assertCanManage(actor, current);
+    await this.assertCanManage(actor, current, scope);
     if (current.status === BOOTCAMP_STATUSES.ARCHIVED) {
       throw new InvalidBootcampTransitionError(current.status, BOOTCAMP_STATUSES.ARCHIVED);
     }
@@ -235,16 +241,24 @@ export class BootcampService {
   }
 
   async getSession(actor: AuthorizationActor, bootcampId: string, sessionId: string) {
-    authorize(actor, PERMISSIONS.BOOTCAMP_MANAGE_SESSIONS);
+    const scope = authorizeResource(
+      actor,
+      PERMISSIONS.BOOTCAMP_MANAGE_SESSIONS,
+      RESOURCE_TYPES.BOOTCAMP,
+    );
     const bootcamp = await this.getRequired(bootcampId);
-    await this.assertCanManage(actor, bootcamp);
+    await this.assertCanManage(actor, bootcamp, scope);
     return this.getRequiredSession(bootcampId, sessionId);
   }
 
   async listSessions(actor: AuthorizationActor, bootcampId: string) {
-    authorize(actor, PERMISSIONS.BOOTCAMP_MANAGE_SESSIONS);
+    const scope = authorizeResource(
+      actor,
+      PERMISSIONS.BOOTCAMP_MANAGE_SESSIONS,
+      RESOURCE_TYPES.BOOTCAMP,
+    );
     const bootcamp = await this.getRequired(bootcampId);
-    await this.assertCanManage(actor, bootcamp);
+    await this.assertCanManage(actor, bootcamp, scope);
     return this.repository.listSessions(bootcampId);
   }
 
@@ -296,9 +310,13 @@ export class BootcampService {
   }
 
   private async getSessionMutableBootcamp(actor: AuthorizationActor, bootcampId: string) {
-    authorize(actor, PERMISSIONS.BOOTCAMP_MANAGE_SESSIONS);
+    const scope = authorizeResource(
+      actor,
+      PERMISSIONS.BOOTCAMP_MANAGE_SESSIONS,
+      RESOURCE_TYPES.BOOTCAMP,
+    );
     const bootcamp = await this.getRequired(bootcampId);
-    await this.assertMutable(actor, bootcamp);
+    await this.assertMutable(actor, bootcamp, scope);
     return bootcamp;
   }
 
@@ -309,32 +327,49 @@ export class BootcampService {
     );
   }
 
-  private async canManage(actor: AuthorizationActor, bootcamp: BootcampDetail) {
-    return (
-      bootcamp.createdById === actor.userId ||
-      can(actor, PERMISSIONS.BOOTCAMP_MANAGE_ALL) ||
-      (await this.repository.isActiveMentor(bootcamp.id, actor.userId))
-    );
+  private async hasResourceScope(
+    actor: AuthorizationActor,
+    bootcamp: BootcampDetail,
+    scope: ResourceScope,
+  ) {
+    if (scope === RESOURCE_SCOPES.ALL) {
+      return true;
+    }
+    if (scope === RESOURCE_SCOPES.ASSIGNED) {
+      return this.repository.isActiveMentor(bootcamp.id, actor.userId);
+    }
+    if (scope === RESOURCE_SCOPES.ENROLLED) {
+      return this.repository.isActiveEnrollment(bootcamp.id, actor.userId);
+    }
+    return false;
   }
 
-  private async assertCanManage(actor: AuthorizationActor, bootcamp: BootcampDetail) {
-    if (!(await this.canManage(actor, bootcamp))) {
+  private async assertCanManage(
+    actor: AuthorizationActor,
+    bootcamp: BootcampDetail,
+    scope: ResourceScope,
+  ) {
+    if (
+      (scope !== RESOURCE_SCOPES.ALL && scope !== RESOURCE_SCOPES.ASSIGNED) ||
+      !(await this.hasResourceScope(actor, bootcamp, scope))
+    ) {
       throw new AuthorizationError();
     }
   }
 
-  private async assertMutable(actor: AuthorizationActor, bootcamp: BootcampDetail) {
-    await this.assertCanManage(actor, bootcamp);
+  private async assertMutable(
+    actor: AuthorizationActor,
+    bootcamp: BootcampDetail,
+    scope: ResourceScope,
+  ) {
+    await this.assertCanManage(actor, bootcamp, scope);
     if (
       bootcamp.status === BOOTCAMP_STATUSES.COMPLETED ||
       bootcamp.status === BOOTCAMP_STATUSES.ARCHIVED
     ) {
       throw new BootcampLifecycleError(`${bootcamp.status} Bootcamps cannot be changed`);
     }
-    if (
-      bootcamp.status !== BOOTCAMP_STATUSES.DRAFT &&
-      !can(actor, PERMISSIONS.BOOTCAMP_MANAGE_ALL)
-    ) {
+    if (bootcamp.status !== BOOTCAMP_STATUSES.DRAFT && scope !== RESOURCE_SCOPES.ALL) {
       throw new AuthorizationError("Only operational management can change a submitted Bootcamp");
     }
   }

@@ -8,7 +8,6 @@ enum EnrollmentKeyAudience {
 enum EnrollmentKeyStatus {
   ACTIVE
   INACTIVE
-  EXPIRED
 
   @@map("enrollment_key_status")
 }

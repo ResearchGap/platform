@@ -10,6 +10,7 @@ import type {
   UpdateBootcampInput,
   UpdateBootcampSessionInput,
 } from "./bootcamp.types";
+import type { ResourceScope } from "../../authorization/access-profiles";
 
 export interface BootcampRepository {
   coverAssetExists(id: string): Promise<boolean>;
@@ -26,7 +27,10 @@ export interface BootcampRepository {
   findPublicBySlug(slug: string): Promise<BootcampDetail | null>;
   findSession(bootcampId: string, sessionId: string): Promise<BootcampSessionDetail | null>;
   isActiveMentor(bootcampId: string, userId: string): Promise<boolean>;
-  list(input: BootcampListInput & { actorUserId?: string }): Promise<BootcampPage<BootcampSummary>>;
+  isActiveEnrollment(bootcampId: string, userId: string): Promise<boolean>;
+  list(
+    input: BootcampListInput & { actorUserId?: string; resourceScope?: ResourceScope },
+  ): Promise<BootcampPage<BootcampSummary>>;
   listPublic(input: Omit<BootcampListInput, "status">): Promise<BootcampPage<BootcampSummary>>;
   listSessions(bootcampId: string): Promise<BootcampSessionDetail[]>;
   reorderSessions(bootcampId: string, sessionIds: string[]): Promise<BootcampSessionDetail[]>;

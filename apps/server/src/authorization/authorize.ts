@@ -1,4 +1,10 @@
-import { ACCESS_PROFILES, FULL_ACCESS } from "./access-profiles";
+import {
+  ACCESS_PROFILES,
+  FULL_ACCESS,
+  configuredResourceScope,
+  type ResourceScope,
+  type ResourceType,
+} from "./access-profiles";
 import {
   ACCOUNT_STATUSES,
   PERMISSION_EFFECTS,
@@ -52,4 +58,18 @@ export function authorize(
   if (!can(actor, permission, now)) {
     throw new AuthorizationError();
   }
+}
+
+export function authorizeResource(
+  actor: AuthorizationActor | null,
+  permission: Permission,
+  resourceType: ResourceType,
+  now = new Date(),
+): ResourceScope {
+  authorize(actor, permission, now);
+  const scope = configuredResourceScope(actor.accessProfileCode, resourceType);
+  if (!scope) {
+    throw new AuthorizationError("No resource scope is configured for this operation");
+  }
+  return scope;
 }

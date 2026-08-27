@@ -14,6 +14,7 @@ import {
   EnrollmentKeyInvalidError,
   EnrollmentKeyUnavailableError,
 } from "../../modules/enrollment/enrollment.errors";
+import { evaluateEnrollmentKeyStatus } from "../../modules/enrollment/enrollment-key-status";
 import type { EnrollmentRepository } from "../../modules/enrollment/enrollment.repository";
 import {
   BOOTCAMP_ENROLLMENT_STATUSES,
@@ -21,6 +22,7 @@ import {
   BOOTCAMP_MENTOR_STATUSES,
   ENROLLMENT_KEY_AUDIENCES,
   ENROLLMENT_KEY_STATUSES,
+  PERSISTED_ENROLLMENT_KEY_STATUSES,
   type BootcampEnrollmentDetail,
   type BootcampMentorDetail,
   type CreateEnrollmentKeyInput,
@@ -28,13 +30,13 @@ import {
   type EligibleMentorListInput,
   type EnrollmentKeyDetail,
   type EnrollmentKeyPageInput,
-  type EnrollmentKeyStatus,
   type EnrollmentPage,
   type LearningBootcampAccess,
   type MyBootcampEnrollment,
   type MyBootcampListInput,
   type ParticipantDetail,
   type ParticipantListInput,
+  type PersistedEnrollmentKeyStatus,
 } from "../../modules/enrollment/enrollment.types";
 
 const personSelect = { id: true, name: true } as const;
@@ -194,16 +196,6 @@ function toSession(record: {
   return { ...session, cover: coverAsset };
 }
 
-function effectiveKeyStatus(
-  status: EnrollmentKeyStatus,
-  expiresAt: Date | null,
-  now: Date,
-): EnrollmentKeyStatus {
-  return status === ENROLLMENT_KEY_STATUSES.ACTIVE && expiresAt && expiresAt <= now
-    ? ENROLLMENT_KEY_STATUSES.EXPIRED
-    : status;
-}
-
 function toKey(
   record: {
     audience: EnrollmentKeyDetail["audience"];
@@ -215,12 +207,12 @@ function toKey(
     id: string;
     keyHint: string | null;
     maxUses: number | null;
-    status: EnrollmentKeyStatus;
+    status: PersistedEnrollmentKeyStatus;
     usageCount: number;
   },
   now = new Date(),
 ): EnrollmentKeyDetail {
-  return { ...record, status: effectiveKeyStatus(record.status, record.expiresAt, now) };
+  return { ...record, status: evaluateEnrollmentKeyStatus(record, now) };
 }
 
 function toEnrollment(record: BootcampEnrollmentDetail): BootcampEnrollmentDetail {
@@ -314,19 +306,32 @@ export class PrismaEnrollmentRepository implements EnrollmentRepository {
     const statusFilter =
       input.status === ENROLLMENT_KEY_STATUSES.EXPIRED
         ? {
-            OR: [
-              { status: ENROLLMENT_KEY_STATUSES.EXPIRED },
-              { status: ENROLLMENT_KEY_STATUSES.ACTIVE, expiresAt: { lte: now } },
-            ],
+            status: PERSISTED_ENROLLMENT_KEY_STATUSES.ACTIVE,
+            expiresAt: { lte: now },
           }
-        : input.status === ENROLLMENT_KEY_STATUSES.ACTIVE
+        : input.status === ENROLLMENT_KEY_STATUSES.EXHAUSTED
           ? {
-              status: ENROLLMENT_KEY_STATUSES.ACTIVE,
+              status: PERSISTED_ENROLLMENT_KEY_STATUSES.ACTIVE,
               OR: [{ expiresAt: null }, { expiresAt: { gt: now } }],
+              maxUses: { not: null },
+              usageCount: { gte: prisma.enrollmentKey.fields.maxUses },
             }
-          : input.status
-            ? { status: input.status }
-            : {};
+          : input.status === ENROLLMENT_KEY_STATUSES.ACTIVE
+            ? {
+                status: PERSISTED_ENROLLMENT_KEY_STATUSES.ACTIVE,
+                AND: [
+                  { OR: [{ expiresAt: null }, { expiresAt: { gt: now } }] },
+                  {
+                    OR: [
+                      { maxUses: null },
+                      { usageCount: { lt: prisma.enrollmentKey.fields.maxUses } },
+                    ],
+                  },
+                ],
+              }
+            : input.status
+              ? { status: input.status }
+              : {};
     const records = await prisma.enrollmentKey.findMany({
       where: {
         bootcampId,
@@ -344,7 +349,7 @@ export class PrismaEnrollmentRepository implements EnrollmentRepository {
   async deactivateKey(bootcampId: string, keyId: string): Promise<EnrollmentKeyDetail | null> {
     const updated = await prisma.enrollmentKey.updateMany({
       where: { id: keyId, bootcampId },
-      data: { status: ENROLLMENT_KEY_STATUSES.INACTIVE },
+      data: { status: PERSISTED_ENROLLMENT_KEY_STATUSES.INACTIVE },
     });
     if (updated.count !== 1) {
       return null;
@@ -693,9 +698,7 @@ export class PrismaEnrollmentRepository implements EnrollmentRepository {
       where: {
         bootcampId,
         menteeId,
-        status: {
-          in: [BOOTCAMP_ENROLLMENT_STATUSES.ACTIVE, BOOTCAMP_ENROLLMENT_STATUSES.COMPLETED],
-        },
+        status: BOOTCAMP_ENROLLMENT_STATUSES.ACTIVE,
         bootcamp: {
           status: { in: [BOOTCAMP_STATUSES.PUBLISHED, BOOTCAMP_STATUSES.COMPLETED] },
         },
@@ -743,7 +746,7 @@ export class PrismaEnrollmentRepository implements EnrollmentRepository {
       bootcampId: string;
       expiresAt: Date | null;
       maxUses: number | null;
-      status: EnrollmentKeyStatus;
+      status: PersistedEnrollmentKeyStatus;
       usageCount: number;
     } | null,
     bootcampId: string,
@@ -755,7 +758,7 @@ export class PrismaEnrollmentRepository implements EnrollmentRepository {
     expiresAt: Date | null;
     id: string;
     maxUses: number | null;
-    status: EnrollmentKeyStatus;
+    status: PersistedEnrollmentKeyStatus;
     usageCount: number;
     bootcamp: { id: string; status: BootcampSummary["status"]; registrationDeadline?: Date | null };
   } {
@@ -765,13 +768,14 @@ export class PrismaEnrollmentRepository implements EnrollmentRepository {
     if (key.audience !== audience) {
       throw new EnrollmentKeyInvalidError(`Enrollment key is not valid for ${audience}`);
     }
-    if (key.status !== ENROLLMENT_KEY_STATUSES.ACTIVE) {
+    const effectiveStatus = evaluateEnrollmentKeyStatus(key, now);
+    if (effectiveStatus === ENROLLMENT_KEY_STATUSES.INACTIVE) {
       throw new EnrollmentKeyUnavailableError("Enrollment key is inactive");
     }
-    if (key.expiresAt && key.expiresAt <= now) {
+    if (effectiveStatus === ENROLLMENT_KEY_STATUSES.EXPIRED) {
       throw new EnrollmentKeyUnavailableError("Enrollment key has expired");
     }
-    if (key.maxUses !== null && key.usageCount >= key.maxUses) {
+    if (effectiveStatus === ENROLLMENT_KEY_STATUSES.EXHAUSTED) {
       throw new EnrollmentKeyUnavailableError("Enrollment key usage limit has been reached");
     }
   }

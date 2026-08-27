@@ -1,4 +1,9 @@
-import { AuthorizationError, authorize, can } from "../../authorization/authorize";
+import {
+  RESOURCE_SCOPES,
+  RESOURCE_TYPES,
+  type ResourceScope,
+} from "../../authorization/access-profiles";
+import { AuthorizationError, authorize, authorizeResource } from "../../authorization/authorize";
 import type { AuthorizationActor } from "../../authorization/authorization.types";
 import { PERMISSIONS } from "../../authorization/permissions";
 import {
@@ -24,7 +29,7 @@ export class ResearchContentService {
   ) {}
 
   async create(actor: AuthorizationActor, input: CreateResearchContentInput) {
-    authorize(actor, PERMISSIONS.CONTENT_CREATE);
+    authorizeResource(actor, PERMISSIONS.CONTENT_CREATE, RESOURCE_TYPES.CONTENT);
     if (input.coverAssetId) {
       authorize(actor, PERMISSIONS.CONTENT_MANAGE_VISUAL);
       await this.assertCoverExists(input.coverAssetId);
@@ -35,9 +40,9 @@ export class ResearchContentService {
   }
 
   async update(actor: AuthorizationActor, id: string, input: UpdateResearchContentInput) {
-    authorize(actor, PERMISSIONS.CONTENT_UPDATE);
+    const scope = authorizeResource(actor, PERMISSIONS.CONTENT_UPDATE, RESOURCE_TYPES.CONTENT);
     const current = await this.getRequired(id);
-    this.assertCanManage(actor, current);
+    this.assertCanManage(actor, current, scope);
     if (current.status === RESEARCH_CONTENT_STATUSES.ARCHIVED) {
       throw new ContentLifecycleError("Archived research content cannot be updated");
     }
@@ -55,12 +60,12 @@ export class ResearchContentService {
   }
 
   async getById(actor: AuthorizationActor, id: string) {
-    authorize(actor, PERMISSIONS.CONTENT_READ);
+    const scope = authorizeResource(actor, PERMISSIONS.CONTENT_READ, RESOURCE_TYPES.CONTENT);
     const content = await this.getRequired(id);
     if (
       content.status !== RESEARCH_CONTENT_STATUSES.PUBLISHED &&
       content.authorId !== actor.userId &&
-      !can(actor, PERMISSIONS.CONTENT_MANAGE_ALL)
+      !this.canManage(actor, content, scope)
     ) {
       throw new AuthorizationError();
     }
@@ -76,10 +81,10 @@ export class ResearchContentService {
   }
 
   async list(actor: AuthorizationActor, input: ContentListInput) {
-    authorize(actor, PERMISSIONS.CONTENT_READ);
+    const scope = authorizeResource(actor, PERMISSIONS.CONTENT_READ, RESOURCE_TYPES.CONTENT);
     return this.repository.list({
       ...input,
-      authorId: can(actor, PERMISSIONS.CONTENT_MANAGE_ALL) ? undefined : actor.userId,
+      authorId: scope === RESOURCE_SCOPES.ALL ? undefined : actor.userId,
     });
   }
 
@@ -88,9 +93,9 @@ export class ResearchContentService {
   }
 
   async publish(actor: AuthorizationActor, id: string) {
-    authorize(actor, PERMISSIONS.CONTENT_PUBLISH);
+    const scope = authorizeResource(actor, PERMISSIONS.CONTENT_PUBLISH, RESOURCE_TYPES.CONTENT);
     const current = await this.getRequired(id);
-    this.assertCanManage(actor, current);
+    this.assertCanManage(actor, current, scope);
     if (current.status !== RESEARCH_CONTENT_STATUSES.DRAFT) {
       throw new InvalidContentTransitionError(current.status, RESEARCH_CONTENT_STATUSES.PUBLISHED);
     }
@@ -112,9 +117,9 @@ export class ResearchContentService {
   }
 
   async archive(actor: AuthorizationActor, id: string) {
-    authorize(actor, PERMISSIONS.CONTENT_PUBLISH);
+    const scope = authorizeResource(actor, PERMISSIONS.CONTENT_PUBLISH, RESOURCE_TYPES.CONTENT);
     const current = await this.getRequired(id);
-    this.assertCanManage(actor, current);
+    this.assertCanManage(actor, current, scope);
     if (current.status === RESEARCH_CONTENT_STATUSES.ARCHIVED) {
       throw new InvalidContentTransitionError(current.status, RESEARCH_CONTENT_STATUSES.ARCHIVED);
     }
@@ -138,8 +143,23 @@ export class ResearchContentService {
     return content;
   }
 
-  private assertCanManage(actor: AuthorizationActor, content: ResearchContentDetail) {
-    if (content.authorId !== actor.userId && !can(actor, PERMISSIONS.CONTENT_MANAGE_ALL)) {
+  private canManage(
+    actor: AuthorizationActor,
+    content: ResearchContentDetail,
+    scope: ResourceScope,
+  ) {
+    return (
+      scope === RESOURCE_SCOPES.ALL ||
+      (scope === RESOURCE_SCOPES.OWNED && content.authorId === actor.userId)
+    );
+  }
+
+  private assertCanManage(
+    actor: AuthorizationActor,
+    content: ResearchContentDetail,
+    scope: ResourceScope,
+  ) {
+    if (!this.canManage(actor, content, scope)) {
       throw new AuthorizationError();
     }
   }

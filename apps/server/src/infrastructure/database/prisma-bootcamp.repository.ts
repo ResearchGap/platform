@@ -1,5 +1,7 @@
 import prisma from "@platform/db";
 
+import { RESOURCE_SCOPES, type ResourceScope } from "../../authorization/access-profiles";
+
 import {
   BootcampConflictError,
   BootcampNotFoundError,
@@ -279,21 +281,31 @@ export class PrismaBootcampRepository implements BootcampRepository {
     );
   }
 
+  async isActiveEnrollment(bootcampId: string, userId: string): Promise<boolean> {
+    return (
+      (await prisma.bootcampEnrollment.count({
+        where: { bootcampId, menteeId: userId, status: "ACTIVE" },
+      })) === 1
+    );
+  }
+
   async list(
-    input: BootcampListInput & { actorUserId?: string },
+    input: BootcampListInput & { actorUserId?: string; resourceScope?: ResourceScope },
   ): Promise<BootcampPage<BootcampSummary>> {
     const records = await prisma.bootcamp.findMany({
       where: {
-        ...(input.actorUserId
+        ...(input.actorUserId && input.resourceScope === RESOURCE_SCOPES.ASSIGNED
           ? {
-              OR: [
-                { createdById: input.actorUserId },
-                {
-                  mentors: {
-                    some: { mentorId: input.actorUserId, status: "ACTIVE" as const },
-                  },
-                },
-              ],
+              mentors: {
+                some: { mentorId: input.actorUserId, status: "ACTIVE" as const },
+              },
+            }
+          : {}),
+        ...(input.actorUserId && input.resourceScope === RESOURCE_SCOPES.ENROLLED
+          ? {
+              enrollments: {
+                some: { menteeId: input.actorUserId, status: "ACTIVE" as const },
+              },
             }
           : {}),
         ...(input.status ? { status: input.status } : {}),

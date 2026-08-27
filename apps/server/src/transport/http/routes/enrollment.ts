@@ -106,7 +106,7 @@ export function createEnrollmentRouter(input: {
   router.get(
     "/me/bootcamps",
     authenticate,
-    requirePermission(PERMISSIONS.ENROLLMENT_READ_OWN),
+    requirePermission(PERMISSIONS.BOOTCAMP_LEARNING_ACCESS),
     async (request, response: Response<unknown, AuthenticatedResponseLocals>) => {
       const query = myBootcampListSchema.parse(request.query);
       response
@@ -118,7 +118,7 @@ export function createEnrollmentRouter(input: {
   router.get(
     "/me/bootcamps/:bootcampId",
     authenticate,
-    requirePermission(PERMISSIONS.ENROLLMENT_READ_OWN),
+    requirePermission(PERMISSIONS.BOOTCAMP_LEARNING_ACCESS),
     async (request, response: Response<unknown, AuthenticatedResponseLocals>) => {
       const bootcampId = enrollmentResourceIdSchema.parse(pathParameter(request.params.bootcampId));
       response

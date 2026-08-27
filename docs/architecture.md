@@ -440,7 +440,7 @@ SUPERADMIN
 
 ## Access Profile
 
-Represents a reusable permission bundle.
+Represents a reusable capability and resource-scope configuration.
 
 Examples:
 
@@ -480,16 +480,36 @@ user.approve
 user.assign-role
 ```
 
+## Resource Scope
+
+Represents which resources an actor may use a capability against. Scope does not grant a
+capability by itself.
+
+Current scopes include:
+
+```text
+ENROLLED
+ASSIGNED
+OWNED
+ALL
+```
+
+Bootcamp access uses active enrollment for `ENROLLED`, active Mentor assignment for `ASSIGNED`,
+and profile configuration for `ALL`.
+
 ---
 
 # 15. Authorization Rule
 
-Business operations must check permissions rather than role names.
+Business operations must check capabilities and, for resource-specific operations, resource
+scope rather than role names.
 
 Conceptually:
 
 ```text
 authorize(actor, "bootcamp.publish")
+
+then resolve the actor's configured Bootcamp scope and target relationship
 ```
 
 rather than:
@@ -504,9 +524,9 @@ This prevents organizational role changes from leaking throughout business code.
 
 # 16. Permission Configuration
 
-Permission definitions should be centralized.
+Permission and resource-scope definitions should be centralized.
 
-Access profiles map to permissions.
+Access profiles map to permissions and resource scopes.
 
 Roles map to default access profiles.
 
@@ -515,7 +535,7 @@ Role
     ↓
 Default Access Profile
     ↓
-Permission Set
+Permission Set + Resource Scopes
 ```
 
 Changing a role's normal access should primarily require changing centralized access configuration.

@@ -17,10 +17,19 @@ export const ENROLLMENT_KEY_STATUSES = {
   ACTIVE: "ACTIVE",
   INACTIVE: "INACTIVE",
   EXPIRED: "EXPIRED",
+  EXHAUSTED: "EXHAUSTED",
 } as const;
 
 export type EnrollmentKeyStatus =
   (typeof ENROLLMENT_KEY_STATUSES)[keyof typeof ENROLLMENT_KEY_STATUSES];
+
+export const PERSISTED_ENROLLMENT_KEY_STATUSES = {
+  ACTIVE: "ACTIVE",
+  INACTIVE: "INACTIVE",
+} as const;
+
+export type PersistedEnrollmentKeyStatus =
+  (typeof PERSISTED_ENROLLMENT_KEY_STATUSES)[keyof typeof PERSISTED_ENROLLMENT_KEY_STATUSES];
 
 export const BOOTCAMP_ENROLLMENT_STATUSES = {
   ACTIVE: "ACTIVE",

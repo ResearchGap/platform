@@ -1,8 +1,13 @@
 import { createHash, randomBytes } from "node:crypto";
 
-import { AuthorizationError, authorize, can } from "../../authorization/authorize";
+import {
+  RESOURCE_SCOPES,
+  RESOURCE_TYPES,
+  type ResourceScope,
+} from "../../authorization/access-profiles";
+import { AuthorizationError, authorize, authorizeResource } from "../../authorization/authorize";
 import type { AuthorizationActor } from "../../authorization/authorization.types";
-import { PERMISSIONS } from "../../authorization/permissions";
+import { PERMISSIONS, type Permission } from "../../authorization/permissions";
 import { BOOTCAMP_STATUSES, type BootcampDetail } from "../bootcamp/bootcamp.types";
 import { BootcampNotEnrollableError, EnrollmentNotFoundError } from "./enrollment.errors";
 import type { EnrollmentRepository } from "./enrollment.repository";
@@ -34,8 +39,12 @@ export class EnrollmentService {
   ) {}
 
   async createKey(actor: AuthorizationActor, bootcampId: string, input: CreateEnrollmentKeyInput) {
-    authorize(actor, PERMISSIONS.BOOTCAMP_ENROLLMENT_KEY_MANAGE);
-    const bootcamp = await this.assertManagedBootcamp(actor, bootcampId);
+    const bootcamp = await this.assertBootcampScope(
+      actor,
+      bootcampId,
+      PERMISSIONS.BOOTCAMP_ENROLLMENT_KEY_MANAGE,
+      [RESOURCE_SCOPES.ASSIGNED, RESOURCE_SCOPES.ALL],
+    );
     if (
       bootcamp.status === BOOTCAMP_STATUSES.COMPLETED ||
       bootcamp.status === BOOTCAMP_STATUSES.ARCHIVED
@@ -58,14 +67,18 @@ export class EnrollmentService {
   }
 
   async listKeys(actor: AuthorizationActor, bootcampId: string, input: EnrollmentKeyPageInput) {
-    authorize(actor, PERMISSIONS.BOOTCAMP_ENROLLMENT_KEY_MANAGE);
-    await this.assertManagedBootcamp(actor, bootcampId);
+    await this.assertBootcampScope(actor, bootcampId, PERMISSIONS.BOOTCAMP_ENROLLMENT_KEY_MANAGE, [
+      RESOURCE_SCOPES.ASSIGNED,
+      RESOURCE_SCOPES.ALL,
+    ]);
     return this.repository.listKeys(bootcampId, input, this.now());
   }
 
   async deactivateKey(actor: AuthorizationActor, bootcampId: string, keyId: string) {
-    authorize(actor, PERMISSIONS.BOOTCAMP_ENROLLMENT_KEY_MANAGE);
-    await this.assertManagedBootcamp(actor, bootcampId);
+    await this.assertBootcampScope(actor, bootcampId, PERMISSIONS.BOOTCAMP_ENROLLMENT_KEY_MANAGE, [
+      RESOURCE_SCOPES.ASSIGNED,
+      RESOURCE_SCOPES.ALL,
+    ]);
     const key = await this.repository.deactivateKey(bootcampId, keyId);
     if (!key) {
       throw new EnrollmentNotFoundError("Enrollment key was not found");
@@ -99,8 +112,12 @@ export class EnrollmentService {
   }
 
   async assignMentor(actor: AuthorizationActor, bootcampId: string, mentorId: string) {
-    authorize(actor, PERMISSIONS.BOOTCAMP_MENTOR_ASSIGN);
-    const bootcamp = await this.getBootcamp(bootcampId);
+    const bootcamp = await this.assertBootcampScope(
+      actor,
+      bootcampId,
+      PERMISSIONS.BOOTCAMP_MENTOR_ASSIGN,
+      [RESOURCE_SCOPES.ALL],
+    );
     if (
       bootcamp.status === BOOTCAMP_STATUSES.COMPLETED ||
       bootcamp.status === BOOTCAMP_STATUSES.ARCHIVED
@@ -116,8 +133,9 @@ export class EnrollmentService {
   }
 
   async removeMentor(actor: AuthorizationActor, bootcampId: string, mentorId: string) {
-    authorize(actor, PERMISSIONS.BOOTCAMP_MENTOR_ASSIGN);
-    await this.getBootcamp(bootcampId);
+    await this.assertBootcampScope(actor, bootcampId, PERMISSIONS.BOOTCAMP_MENTOR_ASSIGN, [
+      RESOURCE_SCOPES.ALL,
+    ]);
     if (!(await this.repository.removeMentor({ bootcampId, mentorId, removedAt: this.now() }))) {
       throw new EnrollmentNotFoundError("Active Mentor assignment was not found");
     }
@@ -128,8 +146,10 @@ export class EnrollmentService {
     bootcampId: string,
     input: { cursor?: string; limit: number },
   ) {
-    authorize(actor, PERMISSIONS.BOOTCAMP_PARTICIPANT_READ);
-    await this.assertManagedBootcamp(actor, bootcampId);
+    await this.assertBootcampScope(actor, bootcampId, PERMISSIONS.BOOTCAMP_PARTICIPANT_READ, [
+      RESOURCE_SCOPES.ASSIGNED,
+      RESOURCE_SCOPES.ALL,
+    ]);
     return this.repository.listMentors(bootcampId, input);
   }
 
@@ -138,18 +158,34 @@ export class EnrollmentService {
     bootcampId: string,
     input: ParticipantListInput,
   ) {
-    authorize(actor, PERMISSIONS.BOOTCAMP_PARTICIPANT_READ);
-    await this.assertManagedBootcamp(actor, bootcampId);
+    await this.assertBootcampScope(actor, bootcampId, PERMISSIONS.BOOTCAMP_PARTICIPANT_READ, [
+      RESOURCE_SCOPES.ASSIGNED,
+      RESOURCE_SCOPES.ALL,
+    ]);
     return this.repository.listParticipants(bootcampId, input);
   }
 
   async listMyBootcamps(actor: AuthorizationActor, input: MyBootcampListInput) {
-    authorize(actor, PERMISSIONS.ENROLLMENT_READ_OWN);
+    const scope = authorizeResource(
+      actor,
+      PERMISSIONS.BOOTCAMP_LEARNING_ACCESS,
+      RESOURCE_TYPES.BOOTCAMP,
+    );
+    if (scope !== RESOURCE_SCOPES.ENROLLED) {
+      throw new AuthorizationError();
+    }
     return this.repository.listMyBootcamps(actor.userId, input);
   }
 
   async getMyLearningAccess(actor: AuthorizationActor, bootcampId: string) {
-    authorize(actor, PERMISSIONS.ENROLLMENT_READ_OWN);
+    const scope = authorizeResource(
+      actor,
+      PERMISSIONS.BOOTCAMP_LEARNING_ACCESS,
+      RESOURCE_TYPES.BOOTCAMP,
+    );
+    if (scope !== RESOURCE_SCOPES.ENROLLED) {
+      throw new AuthorizationError();
+    }
     const access = await this.repository.getLearningAccess(actor.userId, bootcampId);
     if (!access) {
       throw new EnrollmentNotFoundError("Enrolled Bootcamp access was not found");
@@ -161,7 +197,10 @@ export class EnrollmentService {
     actor: AuthorizationActor,
     input: { cursor?: string; limit: number },
   ) {
-    authorize(actor, PERMISSIONS.BOOTCAMP_READ);
+    const scope = authorizeResource(actor, PERMISSIONS.BOOTCAMP_READ, RESOURCE_TYPES.BOOTCAMP);
+    if (scope !== RESOURCE_SCOPES.ASSIGNED) {
+      throw new AuthorizationError();
+    }
     return this.repository.listMentorBootcamps(actor.userId, input);
   }
 
@@ -173,14 +212,22 @@ export class EnrollmentService {
     return bootcamp;
   }
 
-  private async assertManagedBootcamp(actor: AuthorizationActor, bootcampId: string) {
+  private async assertBootcampScope(
+    actor: AuthorizationActor,
+    bootcampId: string,
+    permission: Permission,
+    allowedScopes: readonly ResourceScope[],
+  ) {
+    const scope = authorizeResource(actor, permission, RESOURCE_TYPES.BOOTCAMP);
+    if (!allowedScopes.includes(scope)) {
+      throw new AuthorizationError();
+    }
     const bootcamp = await this.getBootcamp(bootcampId);
     if (bootcamp.status === BOOTCAMP_STATUSES.ARCHIVED) {
       throw new BootcampNotEnrollableError("Archived Bootcamps cannot be managed for enrollment");
     }
     if (
-      bootcamp.createdById !== actor.userId &&
-      !can(actor, PERMISSIONS.BOOTCAMP_MANAGE_ALL) &&
+      scope === RESOURCE_SCOPES.ASSIGNED &&
       !(await this.repository.isActiveMentor(bootcampId, actor.userId))
     ) {
       throw new AuthorizationError();
