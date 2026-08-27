@@ -17,10 +17,40 @@ import type { WebinarRepository } from "./webinar.repository";
 import {
   WEBINAR_STATUSES,
   type CreateWebinarInput,
+  type PublicWebinarDetail,
+  type PublicWebinarSummary,
   type UpdateWebinarInput,
   type WebinarDetail,
   type WebinarListInput,
+  type WebinarSummary,
 } from "./webinar.types";
+
+function toPublicSummary(webinar: WebinarSummary): PublicWebinarSummary {
+  if (
+    webinar.status !== WEBINAR_STATUSES.PUBLISHED &&
+    webinar.status !== WEBINAR_STATUSES.COMPLETED
+  ) {
+    throw new WebinarNotFoundError();
+  }
+
+  return {
+    cover: webinar.cover,
+    id: webinar.id,
+    publishedAt: webinar.publishedAt,
+    registrationUrl: webinar.registrationUrl,
+    scheduledAt: webinar.scheduledAt,
+    sessionType: webinar.sessionType,
+    slug: webinar.slug,
+    speakerName: webinar.speakerName,
+    status: webinar.status,
+    title: webinar.title,
+    venue: webinar.venue,
+  };
+}
+
+function toPublicDetail(webinar: WebinarDetail): PublicWebinarDetail {
+  return { ...toPublicSummary(webinar), description: webinar.description };
+}
 
 export class WebinarService {
   constructor(
@@ -72,7 +102,7 @@ export class WebinarService {
     if (!webinar) {
       throw new WebinarNotFoundError();
     }
-    return webinar;
+    return toPublicDetail(webinar);
   }
 
   async list(actor: AuthorizationActor, input: WebinarListInput) {
@@ -84,7 +114,11 @@ export class WebinarService {
   }
 
   async listPublic(input: Omit<WebinarListInput, "status">) {
-    return this.repository.listPublic(input);
+    const page = await this.repository.listPublic(input);
+    return {
+      ...page,
+      items: page.items.map(toPublicSummary),
+    };
   }
 
   async publish(actor: AuthorizationActor, id: string) {

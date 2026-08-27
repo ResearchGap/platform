@@ -8,23 +8,26 @@
 
 :root {
   --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
+  --foreground: #182033;
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
+  --card-foreground: #182033;
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
+  --popover-foreground: #182033;
+  --primary: #9718f5;
+  --primary-foreground: #ffffff;
+  --secondary: #f5e9ff;
+  --secondary-foreground: #6d10b2;
+  --muted: #f6f7f9;
+  --muted-foreground: #667085;
+  --accent: #fff0e9;
+  --accent-foreground: #a63c17;
   --destructive: oklch(0.58 0.22 27);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
+  --border: #e5e7eb;
+  --input: #e5e7eb;
+  --ring: #9718f5;
+  --brand-purple: #9718f5;
+  --brand-orange: #ff713d;
+  --brand-gradient: linear-gradient(90deg, #9718f5 0%, #b832c8 45%, #ff713d 100%);
   --chart-1: oklch(0.809 0.105 251.813);
   --chart-2: oklch(0.623 0.214 259.815);
   --chart-3: oklch(0.546 0.245 262.881);
@@ -60,6 +63,9 @@
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
   --ring: oklch(0.556 0 0);
+  --brand-purple: #c875ff;
+  --brand-orange: #ff9269;
+  --brand-gradient: linear-gradient(90deg, #b759ff 0%, #d655d7 45%, #ff8a60 100%);
   --chart-1: oklch(0.809 0.105 251.813);
   --chart-2: oklch(0.623 0.214 259.815);
   --chart-3: oklch(0.546 0.245 262.881);
@@ -76,7 +82,9 @@
 }
 
 @theme inline {
-  --font-sans: "Inter Variable", sans-serif;
+  --font-sans: var(--font-poppins), system-ui, sans-serif;
+  --color-brand-purple: var(--brand-purple);
+  --color-brand-orange: var(--brand-orange);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -115,6 +123,10 @@
   --radius-2xl: calc(var(--radius) + 8px);
   --radius-3xl: calc(var(--radius) + 12px);
   --radius-4xl: calc(var(--radius) + 16px);
+}
+
+@utility bg-brand-gradient {
+  background-image: var(--brand-gradient);
 }
 
 @layer base {

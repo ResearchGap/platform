@@ -60,6 +60,24 @@ export interface WebinarDetail extends WebinarSummary {
   description: string;
 }
 
+export interface PublicWebinarSummary {
+  cover: WebinarCover | null;
+  id: string;
+  publishedAt: Date | null;
+  registrationUrl: string | null;
+  scheduledAt: Date;
+  sessionType: WebinarSessionType;
+  slug: string;
+  speakerName: string | null;
+  status: typeof WEBINAR_STATUSES.PUBLISHED | typeof WEBINAR_STATUSES.COMPLETED;
+  title: string;
+  venue: string | null;
+}
+
+export interface PublicWebinarDetail extends PublicWebinarSummary {
+  description: string;
+}
+
 export interface WebinarPage<T> {
   items: T[];
   nextCursor: string | null;
