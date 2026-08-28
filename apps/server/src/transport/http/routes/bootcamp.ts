@@ -22,6 +22,7 @@ import {
   publicBootcampListSchema,
   reorderBootcampSessionsSchema,
   updateBootcampSchema,
+  updateBootcampCoverSchema,
   updateBootcampSessionSchema,
 } from "../../../modules/bootcamp/bootcamp.schema";
 import type { BootcampService } from "../../../modules/bootcamp/bootcamp.service";
@@ -63,6 +64,30 @@ export function createBootcampRouter(input: {
     const slug = bootcampSlugSchema.parse(pathParameter(request.params.slug));
     response.status(200).json(await input.bootcampService.getPublicBySlug(slug));
   });
+
+  router.get(
+    "/visuals/bootcamps",
+    authenticate,
+    requirePermission(PERMISSIONS.BOOTCAMP_MANAGE_VISUAL),
+    async (request, response: Response<unknown, AuthenticatedResponseLocals>) => {
+      const query = bootcampListSchema.parse(request.query);
+      response
+        .status(200)
+        .json(await input.bootcampService.listVisuals(response.locals.actor, query));
+    },
+  );
+
+  router.get(
+    "/visuals/bootcamps/:bootcampId",
+    authenticate,
+    requirePermission(PERMISSIONS.BOOTCAMP_MANAGE_VISUAL),
+    async (request, response: Response<unknown, AuthenticatedResponseLocals>) => {
+      const bootcampId = bootcampIdSchema.parse(pathParameter(request.params.bootcampId));
+      response
+        .status(200)
+        .json(await input.bootcampService.getVisual(response.locals.actor, bootcampId));
+    },
+  );
 
   router.get(
     "/bootcamps",
@@ -108,6 +133,25 @@ export function createBootcampRouter(input: {
       response
         .status(200)
         .json(await input.bootcampService.update(response.locals.actor, bootcampId, update));
+    },
+  );
+
+  router.patch(
+    "/bootcamps/:bootcampId/cover",
+    authenticate,
+    requirePermission(PERMISSIONS.BOOTCAMP_MANAGE_VISUAL),
+    async (request, response: Response<unknown, AuthenticatedResponseLocals>) => {
+      const bootcampId = bootcampIdSchema.parse(pathParameter(request.params.bootcampId));
+      const update = updateBootcampCoverSchema.parse(request.body);
+      response
+        .status(200)
+        .json(
+          await input.bootcampService.updateCover(
+            response.locals.actor,
+            bootcampId,
+            update.coverAssetId,
+          ),
+        );
     },
   );
 

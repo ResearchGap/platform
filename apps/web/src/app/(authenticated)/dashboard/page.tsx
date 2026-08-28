@@ -14,6 +14,7 @@ import { MyBootcampCard } from "@/components/mentee/my-bootcamp-card";
 import { SuperadminDashboard } from "@/components/admin/superadmin-dashboard";
 import { MentorDashboard } from "@/components/mentor/mentor-dashboard";
 import { CooDashboard } from "@/components/operations/coo-dashboard";
+import { CmoDashboard } from "@/components/marketing/cmo-dashboard";
 import { PageHeading } from "@/components/public/page-heading";
 import { PublicEmptyState, PublicErrorState } from "@/components/public/public-states";
 import { listMyBootcamps } from "@/lib/api/mentee";
@@ -57,6 +58,9 @@ export default async function DashboardPage() {
   }
   if (authContext?.account.access.roleCode === "COO") {
     return <CooDashboard name={authContext.session.user.name} requestInit={requestInit} />;
+  }
+  if (authContext?.account.access.roleCode === "CMO") {
+    return <CmoDashboard name={authContext.session.user.name} requestInit={requestInit} />;
   }
 
   let enrollments: MenteePage<MyBootcampEnrollment> | null;

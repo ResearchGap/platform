@@ -56,6 +56,18 @@ function toPublicDetail(bootcamp: BootcampDetail): PublicBootcampDetail {
   return { ...toPublicSummary(bootcamp), description: bootcamp.description };
 }
 
+function toVisualSummary(bootcamp: BootcampSummary) {
+  return {
+    cover: bootcamp.cover,
+    coverAssetId: bootcamp.coverAssetId,
+    endDate: bootcamp.endDate,
+    id: bootcamp.id,
+    startDate: bootcamp.startDate,
+    status: bootcamp.status,
+    title: bootcamp.title,
+  };
+}
+
 function toPublicSession(session: BootcampSessionDetail): PublicBootcampSession {
   return {
     id: session.id,
@@ -120,6 +132,45 @@ export class BootcampService {
     }
 
     return this.repository.update(id, input);
+  }
+
+  async updateCover(actor: AuthorizationActor, id: string, coverAssetId: string | null) {
+    const scope = authorizeResource(
+      actor,
+      PERMISSIONS.BOOTCAMP_MANAGE_VISUAL,
+      RESOURCE_TYPES.BOOTCAMP,
+    );
+    const current = await this.getRequired(id);
+    await this.assertCanManage(actor, current, scope);
+    if (coverAssetId !== null) {
+      await this.assertCoverExists(coverAssetId);
+    }
+    return toVisualSummary(await this.repository.update(id, { coverAssetId }));
+  }
+
+  async getVisual(actor: AuthorizationActor, id: string) {
+    const scope = authorizeResource(
+      actor,
+      PERMISSIONS.BOOTCAMP_MANAGE_VISUAL,
+      RESOURCE_TYPES.BOOTCAMP,
+    );
+    const bootcamp = await this.getRequired(id);
+    await this.assertCanManage(actor, bootcamp, scope);
+    return toVisualSummary(bootcamp);
+  }
+
+  async listVisuals(actor: AuthorizationActor, input: BootcampListInput) {
+    const scope = authorizeResource(
+      actor,
+      PERMISSIONS.BOOTCAMP_MANAGE_VISUAL,
+      RESOURCE_TYPES.BOOTCAMP,
+    );
+    const page = await this.repository.list({
+      ...input,
+      actorUserId: scope === RESOURCE_SCOPES.ALL ? undefined : actor.userId,
+      resourceScope: scope,
+    });
+    return { ...page, items: page.items.map(toVisualSummary) };
   }
 
   async getById(actor: AuthorizationActor, id: string) {

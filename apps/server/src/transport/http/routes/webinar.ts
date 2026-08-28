@@ -13,6 +13,7 @@ import {
   createWebinarSchema,
   publicWebinarListSchema,
   updateWebinarSchema,
+  updateWebinarCoverSchema,
   webinarIdSchema,
   webinarListSchema,
   webinarSlugSchema,
@@ -51,6 +52,30 @@ export function createWebinarRouter(input: {
     const slug = webinarSlugSchema.parse(pathParameter(request.params.slug));
     response.status(200).json(await input.webinarService.getPublicBySlug(slug));
   });
+
+  router.get(
+    "/visuals/webinars",
+    authenticate,
+    requirePermission(PERMISSIONS.WEBINAR_MANAGE_VISUAL),
+    async (request, response: Response<unknown, AuthenticatedResponseLocals>) => {
+      const query = webinarListSchema.parse(request.query);
+      response
+        .status(200)
+        .json(await input.webinarService.listVisuals(response.locals.actor, query));
+    },
+  );
+
+  router.get(
+    "/visuals/webinars/:webinarId",
+    authenticate,
+    requirePermission(PERMISSIONS.WEBINAR_MANAGE_VISUAL),
+    async (request, response: Response<unknown, AuthenticatedResponseLocals>) => {
+      const webinarId = webinarIdSchema.parse(pathParameter(request.params.webinarId));
+      response
+        .status(200)
+        .json(await input.webinarService.getVisual(response.locals.actor, webinarId));
+    },
+  );
 
   router.get(
     "/webinars",
@@ -94,6 +119,25 @@ export function createWebinarRouter(input: {
       response
         .status(200)
         .json(await input.webinarService.update(response.locals.actor, webinarId, update));
+    },
+  );
+
+  router.patch(
+    "/webinars/:webinarId/cover",
+    authenticate,
+    requirePermission(PERMISSIONS.WEBINAR_MANAGE_VISUAL),
+    async (request, response: Response<unknown, AuthenticatedResponseLocals>) => {
+      const webinarId = webinarIdSchema.parse(pathParameter(request.params.webinarId));
+      const update = updateWebinarCoverSchema.parse(request.body);
+      response
+        .status(200)
+        .json(
+          await input.webinarService.updateCover(
+            response.locals.actor,
+            webinarId,
+            update.coverAssetId,
+          ),
+        );
     },
   );
 

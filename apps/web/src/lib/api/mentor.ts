@@ -4,6 +4,7 @@ import type {
   BootcampMentorAssignment,
   BootcampSessionInput,
   BootcampStatus,
+  BootcampVisualSummary,
   CreatedEnrollmentKey,
   ContentInput,
   ContentStatus,
@@ -20,6 +21,7 @@ import type {
   Participant,
   WebinarInput,
   WebinarStatus,
+  WebinarVisualSummary,
 } from "./mentor-types";
 import type { ContentType } from "./public-types";
 
@@ -273,6 +275,72 @@ export function updateContent(id: string, input: ContentInput) {
     method: "PATCH",
     headers: { "content-type": "application/json" },
     body: JSON.stringify(input),
+  });
+}
+
+export function publishContent(id: string) {
+  return contentLifecycle(id, "publish");
+}
+
+export function archiveContent(id: string) {
+  return contentLifecycle(id, "archive");
+}
+
+function contentLifecycle(id: string, action: "publish" | "archive") {
+  return apiRequest<ManagedContentDetail>(`/api/content/${encoded(id)}/${action}`, {
+    method: "POST",
+  });
+}
+
+export function updateBootcampCover(id: string, coverAssetId: string) {
+  return apiRequest<BootcampVisualSummary>(`/api/bootcamps/${encoded(id)}/cover`, {
+    method: "PATCH",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ coverAssetId }),
+  });
+}
+
+export function updateWebinarCover(id: string, coverAssetId: string) {
+  return apiRequest<WebinarVisualSummary>(`/api/webinars/${encoded(id)}/cover`, {
+    method: "PATCH",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ coverAssetId }),
+  });
+}
+
+export function listBootcampVisuals(
+  input: { cursor?: string; limit?: number; status?: BootcampStatus } = {},
+  init: RequestInit = {},
+) {
+  return apiRequest<CursorPage<BootcampVisualSummary>>(
+    "/api/visuals/bootcamps",
+    { cache: "no-store", ...init },
+    { cursor: input.cursor, limit: input.limit ?? 20, status: input.status },
+  );
+}
+
+export function getBootcampVisual(id: string, init: RequestInit = {}) {
+  return apiRequest<BootcampVisualSummary>(`/api/visuals/bootcamps/${encoded(id)}`, {
+    cache: "no-store",
+    ...init,
+  });
+}
+
+export function listWebinarVisuals(
+  input: { cursor?: string; limit?: number; status?: WebinarStatus } = {},
+  init: RequestInit = {},
+) {
+  return apiRequest<CursorPage<WebinarVisualSummary>>(
+    "/api/visuals/webinars",
+    { cache: "no-store", ...init },
+    { cursor: input.cursor, limit: input.limit ?? 20, status: input.status },
+  );
+}
+
+export function getWebinarVisual(id: string, init: RequestInit = {}) {
+  return apiRequest<WebinarVisualSummary>(`/api/visuals/webinars/${encoded(id)}`, {
+    cache: "no-store",
+    ...init,
   });
 }
 

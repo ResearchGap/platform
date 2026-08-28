@@ -1,0 +1,33 @@
+import { notFound } from "next/navigation";
+
+import { ContentForm } from "@/components/mentor/content-form";
+import { PageHeading } from "@/components/public/page-heading";
+import { getManagedContent } from "@/lib/api/mentor";
+import { authenticatedRequestInit } from "@/lib/server-auth";
+
+export default async function EditMarketingContentPage({
+  params,
+}: {
+  params: Promise<{ contentId: string }>;
+}) {
+  const { contentId } = await params;
+  const content = await getManagedContent(contentId, await authenticatedRequestInit()).catch(() =>
+    notFound(),
+  );
+  if (content.status === "ARCHIVED") notFound();
+  return (
+    <div className="flex flex-col gap-8">
+      <PageHeading
+        eyebrow="Research Content"
+        title="Edit content"
+        description={`Update ${content.title}. Lifecycle actions remain separate.`}
+      />
+      <ContentForm
+        allowCover
+        content={content}
+        basePath="/marketing/content"
+        destination="detail"
+      />
+    </div>
+  );
+}

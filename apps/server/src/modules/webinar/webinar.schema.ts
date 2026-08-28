@@ -52,6 +52,10 @@ export const updateWebinarSchema = z
   })
   .refine((input) => Object.keys(input).length > 0, "At least one field must be provided");
 
+export const updateWebinarCoverSchema = z.object({
+  coverAssetId: mediaReferenceSchema.nullable(),
+});
+
 export const webinarListSchema = z.object({
   cursor: z.string().trim().min(1).max(100).optional(),
   limit: z.coerce.number().int().min(1).max(50).default(20),

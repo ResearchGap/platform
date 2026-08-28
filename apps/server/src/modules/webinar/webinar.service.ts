@@ -52,6 +52,18 @@ function toPublicDetail(webinar: WebinarDetail): PublicWebinarDetail {
   return { ...toPublicSummary(webinar), description: webinar.description };
 }
 
+function toVisualSummary(webinar: WebinarSummary) {
+  return {
+    cover: webinar.cover,
+    coverAssetId: webinar.coverAssetId,
+    id: webinar.id,
+    scheduledAt: webinar.scheduledAt,
+    sessionType: webinar.sessionType,
+    status: webinar.status,
+    title: webinar.title,
+  };
+}
+
 export class WebinarService {
   constructor(
     private readonly repository: WebinarRepository,
@@ -86,6 +98,44 @@ export class WebinarService {
     }
 
     return this.repository.update(id, input);
+  }
+
+  async updateCover(actor: AuthorizationActor, id: string, coverAssetId: string | null) {
+    const scope = authorizeResource(
+      actor,
+      PERMISSIONS.WEBINAR_MANAGE_VISUAL,
+      RESOURCE_TYPES.WEBINAR,
+    );
+    const current = await this.getRequired(id);
+    this.assertCanManage(actor, current, scope);
+    if (coverAssetId !== null) {
+      await this.assertCoverExists(coverAssetId);
+    }
+    return toVisualSummary(await this.repository.update(id, { coverAssetId }));
+  }
+
+  async getVisual(actor: AuthorizationActor, id: string) {
+    const scope = authorizeResource(
+      actor,
+      PERMISSIONS.WEBINAR_MANAGE_VISUAL,
+      RESOURCE_TYPES.WEBINAR,
+    );
+    const webinar = await this.getRequired(id);
+    this.assertCanManage(actor, webinar, scope);
+    return toVisualSummary(webinar);
+  }
+
+  async listVisuals(actor: AuthorizationActor, input: WebinarListInput) {
+    const scope = authorizeResource(
+      actor,
+      PERMISSIONS.WEBINAR_MANAGE_VISUAL,
+      RESOURCE_TYPES.WEBINAR,
+    );
+    const page = await this.repository.list({
+      ...input,
+      createdById: scope === RESOURCE_SCOPES.ALL ? undefined : actor.userId,
+    });
+    return { ...page, items: page.items.map(toVisualSummary) };
   }
 
   async getById(actor: AuthorizationActor, id: string) {

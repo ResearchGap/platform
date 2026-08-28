@@ -14,6 +14,7 @@ import {
   Video,
   Menu,
   Newspaper,
+  Images,
   UserRound,
 } from "lucide-react";
 import Link from "next/link";
@@ -54,6 +55,12 @@ const cooNavigation = [
   { href: "/operations/webinars" as Route, label: "Webinars", icon: Video },
 ] as const;
 
+const cmoNavigation = [
+  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/marketing/content" as Route, label: "Research Content", icon: Newspaper },
+  { href: "/marketing/visuals" as Route, label: "Program visuals", icon: Images },
+] as const;
+
 function Brand() {
   return (
     <Link href="/dashboard" className="flex items-center gap-2 font-semibold tracking-tight">
@@ -75,14 +82,17 @@ export function AuthenticatedShell({
   const isMentor = account.access.roleCode === "MENTOR";
   const isSuperadmin = account.access.roleCode === "SUPERADMIN";
   const isCoo = account.access.roleCode === "COO";
+  const isCmo = account.access.roleCode === "CMO";
   const navigation = isSuperadmin
     ? superadminNavigation
     : isCoo
       ? cooNavigation
-      : isMentor
-        ? mentorNavigation
-        : menteeNavigation;
-  const navigationLabel = `${isSuperadmin ? "Superadmin" : isCoo ? "COO" : isMentor ? "Mentor" : "Mentee"} navigation`;
+      : isCmo
+        ? cmoNavigation
+        : isMentor
+          ? mentorNavigation
+          : menteeNavigation;
+  const navigationLabel = `${isSuperadmin ? "Superadmin" : isCoo ? "COO" : isCmo ? "CMO" : isMentor ? "Mentor" : "Mentee"} navigation`;
   const initials = account.user.name
     .split(" ")
     .slice(0, 2)

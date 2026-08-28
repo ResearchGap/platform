@@ -38,6 +38,16 @@ export interface ManagedBootcampDetail extends ManagedBootcampSummary {
   description: string;
 }
 
+export interface BootcampVisualSummary {
+  cover: PublicCover | null;
+  coverAssetId: string | null;
+  endDate: string;
+  id: string;
+  startDate: string;
+  status: BootcampStatus;
+  title: string;
+}
+
 export interface ManagedBootcampSession {
   bootcampId: string;
   cover: PublicCover | null;
@@ -168,6 +178,16 @@ export interface ManagedWebinarSummary {
 
 export interface ManagedWebinarDetail extends ManagedWebinarSummary {
   description: string;
+}
+
+export interface WebinarVisualSummary {
+  cover: PublicCover | null;
+  coverAssetId: string | null;
+  id: string;
+  scheduledAt: string;
+  sessionType: SessionType;
+  status: WebinarStatus;
+  title: string;
 }
 
 export interface BootcampInput {

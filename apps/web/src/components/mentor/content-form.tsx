@@ -1,11 +1,13 @@
 "use client";
 
 import { Field, FieldLabel } from "@platform/ui/components/field";
+import type { Route } from "next";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 
 import { ApiError } from "@/lib/api/client";
+import { MediaUploader } from "@/components/media/media-uploader";
 import { createContent, updateContent } from "@/lib/api/mentor";
 import type { ManagedContentDetail } from "@/lib/api/mentor-types";
 import type { ContentType } from "@/lib/api/public-types";
@@ -13,10 +15,21 @@ import type { ContentType } from "@/lib/api/public-types";
 import { MentorInput, MentorTextarea, optionalValue, requiredValue } from "./form-fields";
 import { MentorFormShell } from "./form-shell";
 
-export function ContentForm({ content }: { content?: ManagedContentDetail }) {
+export function ContentForm({
+  allowCover = false,
+  basePath = "/mentor/content",
+  content,
+  destination = "edit",
+}: {
+  allowCover?: boolean;
+  basePath?: "/mentor/content" | "/marketing/content";
+  content?: ManagedContentDetail;
+  destination?: "detail" | "edit";
+}) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
+  const [coverAssetId, setCoverAssetId] = useState(content?.coverAssetId ?? "");
   return (
     <MentorFormShell
       error={error}
@@ -34,13 +47,13 @@ export function ContentForm({ content }: { content?: ManagedContentDetail }) {
             excerpt: optionalValue(data, "excerpt"),
             content: requiredValue(data, "content"),
             type: requiredValue(data, "type") as ContentType,
-            coverAssetId: optionalValue(data, "coverAssetId"),
+            ...(allowCover ? { coverAssetId: optionalValue(data, "coverAssetId") } : {}),
           };
           const saved = content
             ? await updateContent(content.id, input)
             : await createContent(input);
           toast.success(content ? "Content updated" : "Content draft created");
-          router.push(`/mentor/content/${saved.id}/edit`);
+          router.push(`${basePath}/${saved.id}${destination === "edit" ? "/edit" : ""}` as Route);
           router.refresh();
         } catch (requestError) {
           setError(
@@ -100,13 +113,17 @@ export function ContentForm({ content }: { content?: ManagedContentDetail }) {
         rows={16}
         required
       />
-      <MentorInput
-        id="coverAssetId"
-        name="coverAssetId"
-        label="Cover media asset ID"
-        defaultValue={content?.coverAssetId ?? ""}
-        maxLength={100}
-      />
+      {allowCover ? (
+        <>
+          <input type="hidden" name="coverAssetId" value={coverAssetId} />
+          <MediaUploader
+            label="Research Content cover"
+            initialAssetId={content?.coverAssetId}
+            initialUrl={content?.cover?.externalUrl}
+            onUploaded={(asset) => setCoverAssetId(asset.id)}
+          />
+        </>
+      ) : null}
     </MentorFormShell>
   );
 }
