@@ -2,6 +2,7 @@
 
 import { Field, FieldLabel } from "@platform/ui/components/field";
 import { useRouter } from "next/navigation";
+import type { Route } from "next";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -21,9 +22,11 @@ import {
 import { MentorFormShell } from "./form-shell";
 
 export function SessionForm({
+  basePath = "/mentor/bootcamps",
   bootcampId,
   session,
 }: {
+  basePath?: "/mentor/bootcamps" | "/operations/bootcamps";
   bootcampId: string;
   session?: ManagedBootcampSession;
 }) {
@@ -60,7 +63,7 @@ export function SessionForm({
           if (session) await updateBootcampSession(bootcampId, session.id, input);
           else await createBootcampSession(bootcampId, input);
           toast.success(session ? "Session updated" : "Session created");
-          router.push(`/mentor/bootcamps/${bootcampId}`);
+          router.push(`${basePath}/${bootcampId}` as Route);
           router.refresh();
         } catch (requestError) {
           setError(

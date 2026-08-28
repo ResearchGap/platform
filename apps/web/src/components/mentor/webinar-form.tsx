@@ -2,10 +2,12 @@
 
 import { Field, FieldLabel } from "@platform/ui/components/field";
 import { useRouter } from "next/navigation";
+import type { Route } from "next";
 import { useState } from "react";
 import { toast } from "sonner";
 
 import { ApiError } from "@/lib/api/client";
+import { MediaUploader } from "@/components/media/media-uploader";
 import { createWebinar, updateWebinar } from "@/lib/api/mentor";
 import type { ManagedWebinarDetail } from "@/lib/api/mentor-types";
 import type { SessionType } from "@/lib/api/public-types";
@@ -20,10 +22,17 @@ import {
 } from "./form-fields";
 import { MentorFormShell } from "./form-shell";
 
-export function WebinarForm({ webinar }: { webinar?: ManagedWebinarDetail }) {
+export function WebinarForm({
+  basePath = "/mentor/webinars",
+  webinar,
+}: {
+  basePath?: "/mentor/webinars" | "/operations/webinars";
+  webinar?: ManagedWebinarDetail;
+}) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
+  const [coverAssetId, setCoverAssetId] = useState(webinar?.coverAssetId ?? "");
   return (
     <MentorFormShell
       error={error}
@@ -51,7 +60,7 @@ export function WebinarForm({ webinar }: { webinar?: ManagedWebinarDetail }) {
             ? await updateWebinar(webinar.id, input)
             : await createWebinar(input);
           toast.success(webinar ? "Webinar updated" : "Webinar created");
-          router.push(`/mentor/webinars/${saved.id}/edit`);
+          router.push(`${basePath}/${saved.id}/edit` as Route);
           router.refresh();
         } catch (requestError) {
           setError(
@@ -144,12 +153,12 @@ export function WebinarForm({ webinar }: { webinar?: ManagedWebinarDetail }) {
         defaultValue={webinar?.meetingUrl ?? ""}
         maxLength={2048}
       />
-      <MentorInput
-        id="coverAssetId"
-        name="coverAssetId"
-        label="Cover media asset ID"
-        defaultValue={webinar?.coverAssetId ?? ""}
-        maxLength={100}
+      <input type="hidden" name="coverAssetId" value={coverAssetId} />
+      <MediaUploader
+        label="Webinar cover"
+        initialAssetId={webinar?.coverAssetId}
+        initialUrl={webinar?.cover?.externalUrl}
+        onUploaded={(asset) => setCoverAssetId(asset.id)}
       />
     </MentorFormShell>
   );

@@ -5,11 +5,13 @@ import {
   BookOpenCheck,
   BookOpenText,
   CalendarDays,
+  ClipboardList,
   GraduationCap,
   KeyRound,
   LayoutDashboard,
   ShieldCheck,
   UsersRound,
+  Video,
   Menu,
   Newspaper,
   UserRound,
@@ -46,6 +48,12 @@ const superadminNavigation = [
   { href: "/admin/users" as Route, label: "Users", icon: UsersRound },
 ] as const;
 
+const cooNavigation = [
+  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/operations/bootcamps" as Route, label: "Bootcamps", icon: ClipboardList },
+  { href: "/operations/webinars" as Route, label: "Webinars", icon: Video },
+] as const;
+
 function Brand() {
   return (
     <Link href="/dashboard" className="flex items-center gap-2 font-semibold tracking-tight">
@@ -66,12 +74,15 @@ export function AuthenticatedShell({
 }) {
   const isMentor = account.access.roleCode === "MENTOR";
   const isSuperadmin = account.access.roleCode === "SUPERADMIN";
+  const isCoo = account.access.roleCode === "COO";
   const navigation = isSuperadmin
     ? superadminNavigation
-    : isMentor
-      ? mentorNavigation
-      : menteeNavigation;
-  const navigationLabel = `${isSuperadmin ? "Superadmin" : isMentor ? "Mentor" : "Mentee"} navigation`;
+    : isCoo
+      ? cooNavigation
+      : isMentor
+        ? mentorNavigation
+        : menteeNavigation;
+  const navigationLabel = `${isSuperadmin ? "Superadmin" : isCoo ? "COO" : isMentor ? "Mentor" : "Mentee"} navigation`;
   const initials = account.user.name
     .split(" ")
     .slice(0, 2)

@@ -2,16 +2,90 @@
 
 import { Button } from "@platform/ui/components/button";
 import { Spinner } from "@platform/ui/components/spinner";
-import { ArrowDown, ArrowUp, Send, Trash2 } from "lucide-react";
+import { Archive, ArrowDown, ArrowUp, CheckCircle2, Send, Trash2, Upload } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 
 import { ApiError } from "@/lib/api/client";
-import { deleteBootcampSession, reorderBootcampSessions, submitBootcamp } from "@/lib/api/mentor";
+import {
+  archiveBootcamp,
+  completeBootcamp,
+  deleteBootcampSession,
+  publishBootcamp,
+  reorderBootcampSessions,
+  submitBootcamp,
+} from "@/lib/api/mentor";
+import type { BootcampStatus } from "@/lib/api/mentor-types";
 
 function errorMessage(error: unknown) {
   return error instanceof ApiError ? error.message : "The action could not be completed.";
+}
+
+export function BootcampOperationalActions({
+  bootcampId,
+  status,
+}: {
+  bootcampId: string;
+  status: BootcampStatus;
+}) {
+  const router = useRouter();
+  const [pendingAction, setPendingAction] = useState<string | null>(null);
+  const actions = [
+    status === "DRAFT"
+      ? {
+          key: "submit",
+          label: "Submit for review",
+          icon: Send,
+          run: () => submitBootcamp(bootcampId),
+        }
+      : null,
+    status === "REVIEW"
+      ? { key: "publish", label: "Publish", icon: Upload, run: () => publishBootcamp(bootcampId) }
+      : null,
+    status === "PUBLISHED"
+      ? {
+          key: "complete",
+          label: "Mark completed",
+          icon: CheckCircle2,
+          run: () => completeBootcamp(bootcampId),
+        }
+      : null,
+    status !== "ARCHIVED"
+      ? { key: "archive", label: "Archive", icon: Archive, run: () => archiveBootcamp(bootcampId) }
+      : null,
+  ].filter((action): action is NonNullable<typeof action> => action !== null);
+
+  return (
+    <div className="flex flex-wrap gap-2">
+      {actions.map(({ icon: Icon, key, label, run }) => (
+        <Button
+          key={key}
+          variant={key === "archive" ? "outline" : "default"}
+          disabled={pendingAction !== null}
+          onClick={async () => {
+            if (!window.confirm(`${label} this Bootcamp?`)) return;
+            setPendingAction(key);
+            try {
+              await run();
+              toast.success(`Bootcamp action completed: ${label.toLowerCase()}`);
+              router.refresh();
+            } catch (error) {
+              toast.error(errorMessage(error));
+              setPendingAction(null);
+            }
+          }}
+        >
+          {pendingAction === key ? (
+            <Spinner data-icon="inline-start" />
+          ) : (
+            <Icon data-icon="inline-start" aria-hidden="true" />
+          )}
+          {label}
+        </Button>
+      ))}
+    </div>
+  );
 }
 
 export function SubmitBootcampButton({ bootcampId }: { bootcampId: string }) {

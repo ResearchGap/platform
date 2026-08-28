@@ -7,24 +7,53 @@ import { Input } from "@platform/ui/components/input";
 import { Spinner } from "@platform/ui/components/spinner";
 import { AlertCircle, Upload } from "lucide-react";
 import { useState } from "react";
+import { useEffect } from "react";
 
 import { MediaCover } from "@/components/public/media-cover";
 import { ApiError } from "@/lib/api/client";
-import { uploadMedia, type MediaAssetDto } from "@/lib/api/media";
+import { getMedia, uploadMedia, type MediaAssetDto } from "@/lib/api/media";
 
 const ACCEPTED_IMAGES = "image/jpeg,image/png,image/webp,image/avif";
 
 export function MediaUploader({
   label = "Image",
+  initialAssetId,
+  initialUrl,
   onUploaded,
 }: {
+  initialAssetId?: string | null;
+  initialUrl?: string | null;
   label?: string;
   onUploaded: (asset: MediaAssetDto) => void;
 }) {
   const [file, setFile] = useState<File | null>(null);
-  const [asset, setAsset] = useState<MediaAssetDto | null>(null);
+  const [asset, setAsset] = useState<MediaAssetDto | null>(() =>
+    initialAssetId && initialUrl
+      ? {
+          createdAt: "",
+          id: initialAssetId,
+          mimeType: null,
+          originalName: null,
+          sourceType: "MANAGED",
+          url: initialUrl,
+        }
+      : null,
+  );
   const [error, setError] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+
+  useEffect(() => {
+    if (!initialAssetId || initialUrl) return;
+    let active = true;
+    void getMedia(initialAssetId)
+      .then((resolved) => {
+        if (active) setAsset(resolved);
+      })
+      .catch(() => undefined);
+    return () => {
+      active = false;
+    };
+  }, [initialAssetId, initialUrl]);
 
   return (
     <div className="max-w-xl">

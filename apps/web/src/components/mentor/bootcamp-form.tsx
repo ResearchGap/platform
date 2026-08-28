@@ -1,10 +1,12 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import type { Route } from "next";
 import { useState } from "react";
 import { toast } from "sonner";
 
 import { ApiError } from "@/lib/api/client";
+import { MediaUploader } from "@/components/media/media-uploader";
 import { createBootcamp, updateBootcamp } from "@/lib/api/mentor";
 import type { ManagedBootcampDetail } from "@/lib/api/mentor-types";
 
@@ -18,10 +20,17 @@ import {
 } from "./form-fields";
 import { MentorFormShell } from "./form-shell";
 
-export function BootcampForm({ bootcamp }: { bootcamp?: ManagedBootcampDetail }) {
+export function BootcampForm({
+  basePath = "/mentor/bootcamps",
+  bootcamp,
+}: {
+  basePath?: "/mentor/bootcamps" | "/operations/bootcamps";
+  bootcamp?: ManagedBootcampDetail;
+}) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
+  const [coverAssetId, setCoverAssetId] = useState(bootcamp?.coverAssetId ?? "");
 
   return (
     <MentorFormShell
@@ -50,7 +59,7 @@ export function BootcampForm({ bootcamp }: { bootcamp?: ManagedBootcampDetail })
             ? await updateBootcamp(bootcamp.id, input)
             : await createBootcamp(input);
           toast.success(bootcamp ? "Bootcamp updated" : "Bootcamp created");
-          router.push(`/mentor/bootcamps/${saved.id}`);
+          router.push(`${basePath}/${saved.id}` as Route);
           router.refresh();
         } catch (requestError) {
           setError(
@@ -124,13 +133,12 @@ export function BootcampForm({ bootcamp }: { bootcamp?: ManagedBootcampDetail })
             : undefined
         }
       />
-      <MentorInput
-        id="coverAssetId"
-        name="coverAssetId"
-        label="Cover media asset ID"
-        description="Use an existing ResearchGap media asset reference."
-        defaultValue={bootcamp?.coverAssetId ?? ""}
-        maxLength={100}
+      <input type="hidden" name="coverAssetId" value={coverAssetId} />
+      <MediaUploader
+        label="Bootcamp cover"
+        initialAssetId={bootcamp?.coverAssetId}
+        initialUrl={bootcamp?.cover?.externalUrl}
+        onUploaded={(asset) => setCoverAssetId(asset.id)}
       />
     </MentorFormShell>
   );

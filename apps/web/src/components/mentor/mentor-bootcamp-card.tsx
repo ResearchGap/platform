@@ -3,11 +3,18 @@ import { buttonVariants } from "@platform/ui/components/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@platform/ui/components/card";
 import { ArrowRight, CalendarDays } from "lucide-react";
 import Link from "next/link";
+import type { Route } from "next";
 
 import type { ManagedBootcampSummary } from "@/lib/api/mentor-types";
 import { formatDate, readableLabel } from "@/lib/public-format";
 
-export function MentorBootcampCard({ bootcamp }: { bootcamp: ManagedBootcampSummary }) {
+export function MentorBootcampCard({
+  basePath = "/mentor/bootcamps",
+  bootcamp,
+}: {
+  basePath?: "/mentor/bootcamps" | "/operations/bootcamps";
+  bootcamp: ManagedBootcampSummary;
+}) {
   return (
     <Card>
       <CardHeader>
@@ -27,7 +34,7 @@ export function MentorBootcampCard({ bootcamp }: { bootcamp: ManagedBootcampSumm
       </CardContent>
       <CardFooter>
         <Link
-          href={`/mentor/bootcamps/${bootcamp.id}`}
+          href={`${basePath}/${bootcamp.id}` as Route}
           className={buttonVariants({ variant: "outline", size: "sm" })}
         >
           Manage

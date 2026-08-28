@@ -73,6 +73,36 @@ export interface BootcampMentorAssignment {
   updatedAt: string;
 }
 
+export interface EligibleMentor {
+  email: string;
+  id: string;
+  name: string;
+  profile: {
+    affiliation: string | null;
+    expertise: string | null;
+    researchField: string | null;
+  } | null;
+}
+
+export interface EnrollmentKeyDetail {
+  audience: "MENTEE" | "MENTOR";
+  bootcampId: string;
+  createdAt: string;
+  createdBy: Person;
+  createdById: string;
+  expiresAt: string | null;
+  id: string;
+  keyHint: string | null;
+  maxUses: number | null;
+  status: "ACTIVE" | "INACTIVE" | "EXPIRED" | "EXHAUSTED";
+  usageCount: number;
+}
+
+export interface CreatedEnrollmentKey {
+  key: EnrollmentKeyDetail;
+  rawKey: string;
+}
+
 export interface Participant {
   bootcampId: string;
   enrolledAt: string;

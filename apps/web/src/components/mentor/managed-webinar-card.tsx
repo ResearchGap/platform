@@ -3,11 +3,18 @@ import { buttonVariants } from "@platform/ui/components/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@platform/ui/components/card";
 import { CalendarDays, Pencil } from "lucide-react";
 import Link from "next/link";
+import type { Route } from "next";
 
 import type { ManagedWebinarSummary } from "@/lib/api/mentor-types";
 import { formatDateTime, readableLabel } from "@/lib/public-format";
 
-export function ManagedWebinarCard({ webinar }: { webinar: ManagedWebinarSummary }) {
+export function ManagedWebinarCard({
+  basePath = "/mentor/webinars",
+  webinar,
+}: {
+  basePath?: "/mentor/webinars" | "/operations/webinars";
+  webinar: ManagedWebinarSummary;
+}) {
   return (
     <Card>
       <CardHeader>
@@ -26,7 +33,7 @@ export function ManagedWebinarCard({ webinar }: { webinar: ManagedWebinarSummary
       </CardContent>
       <CardFooter>
         <Link
-          href={`/mentor/webinars/${webinar.id}/edit`}
+          href={`${basePath}/${webinar.id}/edit` as Route}
           className={buttonVariants({ variant: "outline", size: "sm" })}
         >
           <Pencil data-icon="inline-start" aria-hidden="true" />

@@ -1,68 +1,62 @@
 import { Badge } from "@platform/ui/components/badge";
 import { buttonVariants } from "@platform/ui/components/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@platform/ui/components/card";
-import { ExternalLink, Pencil, Plus, Users } from "lucide-react";
+import { ExternalLink, KeyRound, Pencil, Plus, UserRoundPlus, Users } from "lucide-react";
 import Link from "next/link";
+import type { Route } from "next";
 import { notFound } from "next/navigation";
 
-import { SessionActions, SubmitBootcampButton } from "@/components/mentor/bootcamp-actions";
+import { BootcampOperationalActions, SessionActions } from "@/components/mentor/bootcamp-actions";
 import { PageHeading } from "@/components/public/page-heading";
 import { PublicEmptyState } from "@/components/public/public-states";
-import { getManagedBootcamp, listBootcampMentors, listBootcampSessions } from "@/lib/api/mentor";
+import { getManagedBootcamp, listBootcampSessions } from "@/lib/api/mentor";
 import { formatDate, formatDateTime, readableLabel } from "@/lib/public-format";
-import { authenticatedRequestInit, getServerAuthContext } from "@/lib/server-auth";
+import { authenticatedRequestInit } from "@/lib/server-auth";
 
-export default async function ManageBootcampPage({
+export default async function OperationsBootcampDetailPage({
   params,
 }: {
   params: Promise<{ bootcampId: string }>;
 }) {
   const { bootcampId } = await params;
-  const [requestInit, auth] = await Promise.all([
-    authenticatedRequestInit(),
-    getServerAuthContext(),
-  ]);
-  const [bootcamp, sessions, mentors] = await Promise.all([
+  const requestInit = await authenticatedRequestInit();
+  const [bootcamp, sessions] = await Promise.all([
     getManagedBootcamp(bootcampId, requestInit),
     listBootcampSessions(bootcampId, requestInit),
-    listBootcampMentors(bootcampId, {}, requestInit),
   ]).catch(() => notFound());
-  const assignment = mentors.items.find((item) => item.mentorId === auth?.account.user.id);
-  const editable = bootcamp.status === "DRAFT";
-  const sessionIds = sessions.map((session) => session.id);
+  const draft = bootcamp.status === "DRAFT";
+  const sessionIds = sessions.map((item) => item.id);
   return (
     <div className="flex flex-col gap-8">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <PageHeading
-          eyebrow="Bootcamp management"
+          eyebrow="Bootcamp operations"
           title={bootcamp.title}
           description={bootcamp.description}
         />
         <div className="flex flex-wrap gap-2">
-          {editable ? (
-            <>
-              <Link
-                href={`/mentor/bootcamps/${bootcamp.id}/edit`}
-                className={buttonVariants({ variant: "outline" })}
-              >
-                <Pencil data-icon="inline-start" aria-hidden="true" />
-                Edit
-              </Link>
-              <SubmitBootcampButton bootcampId={bootcamp.id} />
-            </>
+          {bootcamp.status !== "COMPLETED" && bootcamp.status !== "ARCHIVED" ? (
+            <Link
+              href={`/operations/bootcamps/${bootcamp.id}/edit` as Route}
+              className={buttonVariants({ variant: "outline" })}
+            >
+              <Pencil data-icon="inline-start" aria-hidden="true" />
+              Edit
+            </Link>
           ) : null}
+          <BootcampOperationalActions bootcampId={bootcamp.id} status={bootcamp.status} />
         </div>
       </div>
       <div className="flex flex-wrap gap-2">
         <Badge>{readableLabel(bootcamp.status)}</Badge>
-        {assignment ? (
-          <Badge variant="outline">Assignment: {readableLabel(assignment.assignmentSource)}</Badge>
+        {bootcamp.publishedBy ? (
+          <Badge variant="outline">Published by {bootcamp.publishedBy.name}</Badge>
         ) : null}
       </div>
       <div className="grid gap-4 sm:grid-cols-3">
         <Info
           label="Dates"
-          value={`${formatDate(bootcamp.startDate)} – ${formatDate(bootcamp.endDate)}`}
+          value={`${formatDate(bootcamp.startDate)} - ${formatDate(bootcamp.endDate)}`}
         />
         <Info
           label="Registration deadline"
@@ -73,6 +67,29 @@ export default async function ManageBootcampPage({
           }
         />
         <Info label="Created by" value={bootcamp.createdBy.name} />
+      </div>
+      <div className="flex flex-wrap gap-2">
+        <Link
+          href={`/operations/bootcamps/${bootcamp.id}/participants` as Route}
+          className={buttonVariants({ variant: "outline" })}
+        >
+          <Users data-icon="inline-start" aria-hidden="true" />
+          Participants
+        </Link>
+        <Link
+          href={`/operations/bootcamps/${bootcamp.id}/mentors` as Route}
+          className={buttonVariants({ variant: "outline" })}
+        >
+          <UserRoundPlus data-icon="inline-start" aria-hidden="true" />
+          Mentors
+        </Link>
+        <Link
+          href={`/operations/bootcamps/${bootcamp.id}/enrollment-keys` as Route}
+          className={buttonVariants({ variant: "outline" })}
+        >
+          <KeyRound data-icon="inline-start" aria-hidden="true" />
+          Enrollment keys
+        </Link>
       </div>
       {bootcamp.whatYouGet ? (
         <section className="max-w-4xl">
@@ -85,32 +102,23 @@ export default async function ManageBootcampPage({
           <div>
             <h2 className="text-xl font-semibold">Sessions</h2>
             <p className="text-sm text-muted-foreground">
-              Ordered session information and external learning resources.
+              Ordered schedule and protected learning resources.
             </p>
           </div>
-          <div className="flex gap-2">
+          {draft ? (
             <Link
-              href={`/mentor/bootcamps/${bootcamp.id}/participants`}
-              className={buttonVariants({ variant: "outline" })}
+              href={`/operations/bootcamps/${bootcamp.id}/sessions/new` as Route}
+              className={buttonVariants({ variant: "brand" })}
             >
-              <Users data-icon="inline-start" aria-hidden="true" />
-              Participants
+              <Plus data-icon="inline-start" aria-hidden="true" />
+              Add session
             </Link>
-            {editable ? (
-              <Link
-                href={`/mentor/bootcamps/${bootcamp.id}/sessions/new`}
-                className={buttonVariants({ variant: "brand" })}
-              >
-                <Plus data-icon="inline-start" aria-hidden="true" />
-                Add session
-              </Link>
-            ) : null}
-          </div>
+          ) : null}
         </div>
         {sessions.length === 0 ? (
           <PublicEmptyState
             title="No sessions yet"
-            description="Add the first session while this Bootcamp is a draft."
+            description="Sessions can be added while the Bootcamp is a draft."
           />
         ) : (
           <div className="flex flex-col gap-4">
@@ -126,7 +134,7 @@ export default async function ManageBootcampPage({
                 <CardContent className="flex flex-col gap-3 text-sm">
                   <p>
                     {formatDateTime(session.scheduledAt)}
-                    {session.speakerName ? ` · ${session.speakerName}` : ""}
+                    {session.speakerName ? ` - ${session.speakerName}` : ""}
                   </p>
                   {session.description ? (
                     <p className="text-muted-foreground">{session.description}</p>
@@ -146,15 +154,17 @@ export default async function ManageBootcampPage({
                         className="inline-flex items-center gap-1 text-primary hover:underline"
                       >
                         {label}
-                        <ExternalLink aria-hidden="true" className="size-3.5" />
+                        <ExternalLink className="size-3.5" aria-hidden="true" />
                       </a>
                     ))}
                   </div>
                 </CardContent>
-                {editable ? (
+                {draft ? (
                   <CardFooter className="flex flex-wrap justify-between gap-3">
                     <Link
-                      href={`/mentor/bootcamps/${bootcamp.id}/sessions/${session.id}/edit`}
+                      href={
+                        `/operations/bootcamps/${bootcamp.id}/sessions/${session.id}/edit` as Route
+                      }
                       className={buttonVariants({ variant: "outline", size: "sm" })}
                     >
                       <Pencil data-icon="inline-start" aria-hidden="true" />
@@ -187,6 +197,7 @@ function Info({ label, value }: { label: string; value: string }) {
     </Card>
   );
 }
+
 function resourceLinks(session: {
   feedbackUrl: string | null;
   moduleUrl: string | null;
