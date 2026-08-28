@@ -12,18 +12,59 @@ import {
 import {
   IdentityNotFoundError,
   InvalidApprovalTransitionError,
+  PermissionOverrideConflictError,
 } from "../../modules/identity/identity.errors";
-import type { IdentityAccessRepository } from "../../modules/identity/identity.repository";
+import type {
+  IdentityAccessRepository,
+  IdentityAdministrationRepository,
+} from "../../modules/identity/identity.repository";
 import {
   APPROVAL_DECISIONS,
   APPROVAL_STATUSES,
+  type AdminApprovalSummary,
+  type AdminDashboardSummary,
+  type AdminPage,
+  type AdminUserDetail,
+  type AdminUserSummary,
   type ApprovalReviewResult,
+  type ApprovalStatus,
+  type CreatePermissionOverrideInput,
   type CurrentAccountDetail,
   type UpdateUserProfileInput,
   type UserProfileDetail,
 } from "../../modules/identity/identity.types";
 
-export class PrismaIdentityRepository implements IdentityAccessRepository {
+const adminProfileSelect = {
+  affiliation: true,
+  biography: true,
+  expertise: true,
+  institution: true,
+  nickname: true,
+  researchField: true,
+  whatsapp: true,
+} as const;
+
+const adminApprovalSelect = {
+  createdAt: true,
+  id: true,
+  requestedRoleCode: true,
+  reviewedAt: true,
+  reviewNote: true,
+  reviewedBy: { select: { id: true, name: true } },
+  status: true,
+  user: {
+    select: {
+      email: true,
+      id: true,
+      name: true,
+      profile: { select: adminProfileSelect },
+    },
+  },
+} as const;
+
+export class PrismaIdentityRepository
+  implements IdentityAccessRepository, IdentityAdministrationRepository
+{
   async initializeMentee(userId: string): Promise<void> {
     await prisma.$transaction(async (transaction) => {
       await transaction.userProfile.upsert({
@@ -273,4 +314,260 @@ export class PrismaIdentityRepository implements IdentityAccessRepository {
       return { email: user.email, userId: user.id };
     });
   }
+
+  async getAdminDashboardSummary(): Promise<AdminDashboardSummary> {
+    const [
+      totalUsers,
+      accountStatuses,
+      roleDistribution,
+      pendingMentorApprovals,
+      pendingStaffApprovals,
+    ] = await Promise.all([
+      prisma.userAccess.count(),
+      prisma.userAccess.groupBy({ by: ["accountStatus"], _count: { _all: true } }),
+      prisma.userAccess.groupBy({ by: ["roleCode"], _count: { _all: true } }),
+      prisma.accountApproval.count({
+        where: { status: APPROVAL_STATUSES.PENDING, requestedRoleCode: ROLES.MENTOR },
+      }),
+      prisma.accountApproval.count({
+        where: {
+          status: APPROVAL_STATUSES.PENDING,
+          requestedRoleCode: { in: [ROLES.CEO, ROLES.COO, ROLES.CMO] },
+        },
+      }),
+    ]);
+
+    return {
+      totalUsers,
+      pendingMentorApprovals,
+      pendingStaffApprovals,
+      accountStatuses: {
+        PENDING:
+          accountStatuses.find((entry) => entry.accountStatus === "PENDING")?._count._all ?? 0,
+        ACTIVE: accountStatuses.find((entry) => entry.accountStatus === "ACTIVE")?._count._all ?? 0,
+        SUSPENDED:
+          accountStatuses.find((entry) => entry.accountStatus === "SUSPENDED")?._count._all ?? 0,
+        DISABLED:
+          accountStatuses.find((entry) => entry.accountStatus === "DISABLED")?._count._all ?? 0,
+      },
+      roleDistribution: Object.fromEntries(
+        roleDistribution.map((entry) => [entry.roleCode, entry._count._all]),
+      ),
+    };
+  }
+
+  async listAdminApprovals(input: {
+    cursor?: string;
+    limit: number;
+    requestedRoleCode?: RoleCode;
+    status?: ApprovalStatus;
+  }): Promise<AdminPage<AdminApprovalSummary>> {
+    const rows = await prisma.accountApproval.findMany({
+      where: {
+        requestedRoleCode: input.requestedRoleCode,
+        status: input.status,
+      },
+      select: adminApprovalSelect,
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+      cursor: input.cursor ? { id: input.cursor } : undefined,
+      skip: input.cursor ? 1 : 0,
+      take: input.limit + 1,
+    });
+    const hasMore = rows.length > input.limit;
+    const pageRows = hasMore ? rows.slice(0, input.limit) : rows;
+    const items = pageRows.map(({ reviewedBy, ...approval }) => ({
+      ...approval,
+      reviewer: reviewedBy,
+    }));
+    return { items, nextCursor: hasMore ? (pageRows.at(-1)?.id ?? null) : null };
+  }
+
+  async findAdminApproval(approvalId: string): Promise<AdminApprovalSummary | null> {
+    const approval = await prisma.accountApproval.findUnique({
+      where: { id: approvalId },
+      select: adminApprovalSelect,
+    });
+    if (!approval) return null;
+    const { reviewedBy, ...detail } = approval;
+    return { ...detail, reviewer: reviewedBy };
+  }
+
+  async listAdminUsers(input: {
+    accountStatus?: AccountStatus;
+    approvalStatus?: ApprovalStatus;
+    cursor?: string;
+    limit: number;
+    roleCode?: RoleCode;
+  }): Promise<AdminPage<AdminUserSummary>> {
+    const rows = await prisma.user.findMany({
+      where: {
+        access: {
+          is: {
+            accountStatus: input.accountStatus,
+            roleCode: input.roleCode,
+          },
+        },
+        approvalRequest: input.approvalStatus
+          ? { is: { status: input.approvalStatus } }
+          : undefined,
+      },
+      select: {
+        id: true,
+        email: true,
+        image: true,
+        name: true,
+        createdAt: true,
+        access: {
+          select: { accessProfileCode: true, accountStatus: true, roleCode: true },
+        },
+        approvalRequest: {
+          select: { id: true, requestedRoleCode: true, status: true },
+        },
+        profile: { select: adminProfileSelect },
+        _count: { select: { permissionOverrides: true } },
+      },
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+      cursor: input.cursor ? { id: input.cursor } : undefined,
+      skip: input.cursor ? 1 : 0,
+      take: input.limit + 1,
+    });
+    const hasMore = rows.length > input.limit;
+    const pageRows = hasMore ? rows.slice(0, input.limit) : rows;
+    const items = pageRows.flatMap((row) =>
+      row.access
+        ? [
+            {
+              access: row.access,
+              approval: row.approvalRequest,
+              createdAt: row.createdAt,
+              email: row.email,
+              id: row.id,
+              image: row.image,
+              name: row.name,
+              overrideCount: row._count.permissionOverrides,
+              profile: row.profile,
+            },
+          ]
+        : [],
+    );
+    return { items, nextCursor: hasMore ? (pageRows.at(-1)?.id ?? null) : null };
+  }
+
+  async findAdminUser(userId: string): Promise<AdminUserDetail | null> {
+    const row = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        email: true,
+        image: true,
+        name: true,
+        createdAt: true,
+        access: {
+          select: { accessProfileCode: true, accountStatus: true, roleCode: true },
+        },
+        approvalRequest: {
+          select: {
+            createdAt: true,
+            id: true,
+            requestedRoleCode: true,
+            reviewedAt: true,
+            reviewNote: true,
+            reviewedBy: { select: { id: true, name: true } },
+            status: true,
+          },
+        },
+        profile: { select: adminProfileSelect },
+        permissionOverrides: {
+          select: {
+            createdAt: true,
+            createdBy: { select: { id: true, name: true } },
+            effect: true,
+            expiresAt: true,
+            id: true,
+            permissionKey: true,
+            reason: true,
+          },
+          orderBy: { createdAt: "desc" },
+        },
+      },
+    });
+    if (!row?.access) return null;
+
+    return {
+      access: row.access,
+      approval: row.approvalRequest
+        ? {
+            ...row.approvalRequest,
+            reviewer: row.approvalRequest.reviewedBy,
+            user: {
+              email: row.email,
+              id: row.id,
+              name: row.name,
+              profile: row.profile,
+            },
+          }
+        : null,
+      createdAt: row.createdAt,
+      email: row.email,
+      id: row.id,
+      image: row.image,
+      name: row.name,
+      overrideCount: row.permissionOverrides.length,
+      overrides: row.permissionOverrides,
+      profile: row.profile,
+    };
+  }
+
+  async updateAdminAccountStatus(userId: string, status: AccountStatus): Promise<AdminUserDetail> {
+    await prisma.userAccess.update({ where: { userId }, data: { accountStatus: status } });
+    const user = await this.findAdminUser(userId);
+    if (!user) throw new IdentityNotFoundError("Application user was not found");
+    return user;
+  }
+
+  async updateAdminRole(userId: string, roleCode: RoleCode): Promise<AdminUserDetail> {
+    await prisma.userAccess.update({
+      where: { userId },
+      data: { roleCode, accessProfileCode: ROLE_DEFAULT_ACCESS[roleCode] },
+    });
+    const user = await this.findAdminUser(userId);
+    if (!user) throw new IdentityNotFoundError("Application user was not found");
+    return user;
+  }
+
+  async createPermissionOverride(
+    actorId: string,
+    userId: string,
+    input: CreatePermissionOverrideInput,
+  ): Promise<AdminUserDetail> {
+    try {
+      await prisma.userPermissionOverride.create({
+        data: {
+          createdById: actorId,
+          effect: input.effect,
+          expiresAt: input.expiresAt,
+          permissionKey: input.permissionKey,
+          reason: input.reason,
+          userId,
+        },
+      });
+    } catch (error) {
+      if (isUniqueConstraintError(error)) throw new PermissionOverrideConflictError();
+      throw error;
+    }
+    const user = await this.findAdminUser(userId);
+    if (!user) throw new IdentityNotFoundError("Application user was not found");
+    return user;
+  }
+
+  async deletePermissionOverride(userId: string, overrideId: string): Promise<void> {
+    const result = await prisma.userPermissionOverride.deleteMany({
+      where: { id: overrideId, userId },
+    });
+    if (result.count !== 1) throw new IdentityNotFoundError("Permission override was not found");
+  }
+}
+
+function isUniqueConstraintError(error: unknown): error is { code: "P2002" } {
+  return typeof error === "object" && error !== null && "code" in error && error.code === "P2002";
 }

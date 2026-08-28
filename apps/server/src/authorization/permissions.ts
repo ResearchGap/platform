@@ -28,6 +28,7 @@ export const PERMISSIONS = {
   USER_APPROVE: "user.approve",
   USER_UPDATE: "user.update",
   USER_ASSIGN_ROLE: "user.assign-role",
+  USER_MANAGE_PERMISSION_OVERRIDES: "user.permission-override.manage",
   ANALYTICS_READ_EXECUTIVE: "analytics.executive.read",
   SYSTEM_MANAGE: "system.manage",
 } as const;

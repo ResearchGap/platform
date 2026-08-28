@@ -6,14 +6,24 @@ import { AuthorizationError } from "../../../authorization/authorize";
 import { PERMISSIONS } from "../../../authorization/permissions";
 import {
   IdentityNotFoundError,
+  InvalidAccountAdministrationError,
   InvalidApprovalTransitionError,
+  PermissionOverrideConflictError,
 } from "../../../modules/identity/identity.errors";
 import type {
   CurrentAccountRepository,
   IdentityAccessRepository,
 } from "../../../modules/identity/identity.repository";
 import type { ApprovalService } from "../../../modules/identity/approval.service";
+import type { IdentityAdministrationService } from "../../../modules/identity/administration.service";
 import type { RegistrationService } from "../../../modules/identity/registration.service";
+import {
+  adminApprovalListSchema,
+  adminUserListSchema,
+  createPermissionOverrideSchema,
+  updateAdminAccountStatusSchema,
+  updateAdminRoleSchema,
+} from "../../../modules/identity/administration.schema";
 import { updateUserProfileSchema } from "../../../modules/identity/profile.schema";
 import { publicRegistrationSchema } from "../../../modules/identity/registration.schema";
 import { APPROVAL_DECISIONS } from "../../../modules/identity/identity.types";
@@ -38,6 +48,7 @@ function appendCookies(response: Response, cookies: readonly string[]) {
 
 export function createIdentityRouter(input: {
   accountRepository?: CurrentAccountRepository;
+  administrationService?: IdentityAdministrationService;
   approvalService: Pick<ApprovalService, "review">;
   registrationService: Pick<RegistrationService, "register">;
   repository: IdentityAccessRepository;
@@ -104,6 +115,144 @@ export function createIdentityRouter(input: {
     },
   );
 
+  const administrationService = input.administrationService;
+  if (administrationService) {
+    router.get(
+      "/admin/summary",
+      authenticate,
+      async (_request, response: Response<unknown, AuthenticatedResponseLocals>) => {
+        response.status(200).json(await administrationService.getDashboard(response.locals.actor));
+      },
+    );
+
+    router.get(
+      "/admin/permissions",
+      authenticate,
+      (request, response: Response<unknown, AuthenticatedResponseLocals>) => {
+        void request;
+        response
+          .status(200)
+          .json({ items: administrationService.permissionCatalog(response.locals.actor) });
+      },
+    );
+
+    router.get(
+      "/admin/approvals",
+      authenticate,
+      async (request, response: Response<unknown, AuthenticatedResponseLocals>) => {
+        const query = adminApprovalListSchema.parse(request.query);
+        response
+          .status(200)
+          .json(await administrationService.listApprovals(response.locals.actor, query));
+      },
+    );
+
+    router.get(
+      "/admin/approvals/:approvalId",
+      authenticate,
+      async (request, response: Response<unknown, AuthenticatedResponseLocals>) => {
+        response
+          .status(200)
+          .json(
+            await administrationService.getApproval(
+              response.locals.actor,
+              routeParameter(request.params.approvalId),
+            ),
+          );
+      },
+    );
+
+    router.get(
+      "/admin/users",
+      authenticate,
+      async (request, response: Response<unknown, AuthenticatedResponseLocals>) => {
+        const query = adminUserListSchema.parse(request.query);
+        response
+          .status(200)
+          .json(await administrationService.listUsers(response.locals.actor, query));
+      },
+    );
+
+    router.get(
+      "/admin/users/:userId",
+      authenticate,
+      async (request, response: Response<unknown, AuthenticatedResponseLocals>) => {
+        response
+          .status(200)
+          .json(
+            await administrationService.getUser(
+              response.locals.actor,
+              routeParameter(request.params.userId),
+            ),
+          );
+      },
+    );
+
+    router.patch(
+      "/admin/users/:userId/status",
+      authenticate,
+      async (request, response: Response<unknown, AuthenticatedResponseLocals>) => {
+        const body = updateAdminAccountStatusSchema.parse(request.body);
+        response
+          .status(200)
+          .json(
+            await administrationService.updateAccountStatus(
+              response.locals.actor,
+              routeParameter(request.params.userId),
+              body.status,
+            ),
+          );
+      },
+    );
+
+    router.patch(
+      "/admin/users/:userId/role",
+      authenticate,
+      async (request, response: Response<unknown, AuthenticatedResponseLocals>) => {
+        const body = updateAdminRoleSchema.parse(request.body);
+        response
+          .status(200)
+          .json(
+            await administrationService.updateRole(
+              response.locals.actor,
+              routeParameter(request.params.userId),
+              body.roleCode,
+            ),
+          );
+      },
+    );
+
+    router.post(
+      "/admin/users/:userId/permission-overrides",
+      authenticate,
+      async (request, response: Response<unknown, AuthenticatedResponseLocals>) => {
+        const body = createPermissionOverrideSchema.parse(request.body);
+        response
+          .status(201)
+          .json(
+            await administrationService.createOverride(
+              response.locals.actor,
+              routeParameter(request.params.userId),
+              body,
+            ),
+          );
+      },
+    );
+
+    router.delete(
+      "/admin/users/:userId/permission-overrides/:overrideId",
+      authenticate,
+      async (request, response: Response<unknown, AuthenticatedResponseLocals>) => {
+        await administrationService.deleteOverride(
+          response.locals.actor,
+          routeParameter(request.params.userId),
+          routeParameter(request.params.overrideId),
+        );
+        response.status(204).send();
+      },
+    );
+  }
+
   const errorHandler: ErrorRequestHandler = (error, _request, response, _next) => {
     if (error instanceof z.ZodError) {
       response.status(400).json({ error: "invalid_request", issues: error.issues });
@@ -125,6 +274,13 @@ export function createIdentityRouter(input: {
       response.status(409).json({ error: "invalid_transition", message: error.message });
       return;
     }
+    if (
+      error instanceof InvalidAccountAdministrationError ||
+      error instanceof PermissionOverrideConflictError
+    ) {
+      response.status(409).json({ error: "operation_conflict", message: error.message });
+      return;
+    }
     if (error instanceof APIError) {
       response.status(error.statusCode).json({ error: error.body?.code ?? "authentication_error" });
       return;
@@ -134,4 +290,8 @@ export function createIdentityRouter(input: {
   router.use(errorHandler);
 
   return router;
+}
+
+function routeParameter(value: string | string[] | undefined): string {
+  return Array.isArray(value) ? (value[0] ?? "") : (value ?? "");
 }

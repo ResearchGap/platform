@@ -18,3 +18,17 @@ export class RegistrationConsistencyError extends Error {
     this.name = "RegistrationConsistencyError";
   }
 }
+
+export class InvalidAccountAdministrationError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "InvalidAccountAdministrationError";
+  }
+}
+
+export class PermissionOverrideConflictError extends Error {
+  constructor() {
+    super("This user already has an override for the selected permission");
+    this.name = "PermissionOverrideConflictError";
+  }
+}

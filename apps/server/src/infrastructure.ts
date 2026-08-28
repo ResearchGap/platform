@@ -4,6 +4,7 @@ import { fromNodeHeaders, toNodeHandler } from "better-auth/node";
 import type { Router } from "express";
 
 import { ApprovalService } from "./modules/identity/approval.service";
+import { IdentityAdministrationService } from "./modules/identity/administration.service";
 import { RegistrationService } from "./modules/identity/registration.service";
 import { BetterAuthIdentityProvider } from "./infrastructure/auth/better-auth-identity";
 import { PrismaIdentityRepository } from "./infrastructure/database/prisma-identity.repository";
@@ -42,6 +43,7 @@ export const auth = createAuth({
 const identityProvider = new BetterAuthIdentityProvider(auth);
 const registrationService = new RegistrationService(identityProvider, identityRepository);
 const approvalService = new ApprovalService(identityRepository);
+const administrationService = new IdentityAdministrationService(identityRepository);
 const bootcampRepository = new PrismaBootcampRepository();
 const bootcampService = new BootcampService(bootcampRepository);
 const enrollmentRepository = new PrismaEnrollmentRepository();
@@ -62,6 +64,7 @@ const resolveSessionUser = async (headers: Parameters<typeof fromNodeHeaders>[0]
 export const authHandler = toNodeHandler(auth);
 export const identityRouter: Router = createIdentityRouter({
   accountRepository: identityRepository,
+  administrationService,
   approvalService,
   registrationService,
   repository: identityRepository,

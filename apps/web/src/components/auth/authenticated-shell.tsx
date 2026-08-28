@@ -8,11 +8,14 @@ import {
   GraduationCap,
   KeyRound,
   LayoutDashboard,
+  ShieldCheck,
+  UsersRound,
   Menu,
   Newspaper,
   UserRound,
 } from "lucide-react";
 import Link from "next/link";
+import type { Route } from "next";
 
 import type { CurrentAccount } from "@/lib/api/mentee-types";
 
@@ -37,6 +40,12 @@ const mentorNavigation = [
   { href: "/profile", label: "Profile", icon: UserRound },
 ] as const;
 
+const superadminNavigation = [
+  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/admin/approvals" as Route, label: "Approvals", icon: ShieldCheck },
+  { href: "/admin/users" as Route, label: "Users", icon: UsersRound },
+] as const;
+
 function Brand() {
   return (
     <Link href="/dashboard" className="flex items-center gap-2 font-semibold tracking-tight">
@@ -56,8 +65,13 @@ export function AuthenticatedShell({
   children: React.ReactNode;
 }) {
   const isMentor = account.access.roleCode === "MENTOR";
-  const navigation = isMentor ? mentorNavigation : menteeNavigation;
-  const navigationLabel = `${isMentor ? "Mentor" : "Mentee"} navigation`;
+  const isSuperadmin = account.access.roleCode === "SUPERADMIN";
+  const navigation = isSuperadmin
+    ? superadminNavigation
+    : isMentor
+      ? mentorNavigation
+      : menteeNavigation;
+  const navigationLabel = `${isSuperadmin ? "Superadmin" : isMentor ? "Mentor" : "Mentee"} navigation`;
   const initials = account.user.name
     .split(" ")
     .slice(0, 2)

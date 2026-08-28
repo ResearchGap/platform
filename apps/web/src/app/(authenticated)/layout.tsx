@@ -10,7 +10,7 @@ export default async function AuthenticatedLayout({ children }: { children: Reac
   }
   if (
     context.account.access.accountStatus !== "ACTIVE" ||
-    (context.account.access.roleCode !== "MENTEE" && context.account.access.roleCode !== "MENTOR")
+    !["MENTEE", "MENTOR", "SUPERADMIN"].includes(context.account.access.roleCode)
   ) {
     redirect("/account");
   }
