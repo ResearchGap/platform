@@ -1402,6 +1402,16 @@ Complete operational administration for CEO, COO, CMO, and Superadmin.
 - Remove unused code and temporary development artifacts.
 - Documentation synchronization where required.
 
+#### **API Documentation**
+
+- OpenAPI specification for REST API.
+- Swagger UI for development/internal API exploration.
+- Document authentication requirements.
+- Document request/response schemas.
+- Document major error responses.
+- Document public vs protected endpoints.
+- Keep API documentation synchronized with implemented routes.
+
 ### **Deliverable**
 
 MVP Release Candidate with verified core functionality, security, authorization, data integrity, and frontend quality.
