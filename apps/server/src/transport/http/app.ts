@@ -8,6 +8,7 @@ interface HttpAppDependencies {
   corsOrigin: string;
   enrollmentRouter?: Router;
   identityRouter?: Router;
+  mediaRouter?: Router;
   researchContentRouter?: Router;
   webinarRouter?: Router;
 }
@@ -19,6 +20,7 @@ export function createHttpApp({
   corsOrigin,
   enrollmentRouter,
   identityRouter,
+  mediaRouter,
   researchContentRouter,
   webinarRouter,
 }: HttpAppDependencies): Express {
@@ -51,6 +53,9 @@ export function createHttpApp({
   }
   if (webinarRouter) {
     app.use("/api", webinarRouter);
+  }
+  if (mediaRouter) {
+    app.use("/api", mediaRouter);
   }
 
   app.get("/", (_request, response) => {

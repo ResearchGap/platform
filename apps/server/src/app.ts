@@ -5,6 +5,7 @@ import {
   checkDatabase,
   enrollmentRouter,
   identityRouter,
+  mediaRouter,
   researchContentRouter,
   webinarRouter,
 } from "./infrastructure";
@@ -18,6 +19,7 @@ export const app: Express = createHttpApp({
   corsOrigin: serverConfig.corsOrigin,
   enrollmentRouter,
   identityRouter,
+  mediaRouter,
   researchContentRouter,
   webinarRouter,
 });

@@ -7,19 +7,24 @@ import { ApprovalService } from "./modules/identity/approval.service";
 import { RegistrationService } from "./modules/identity/registration.service";
 import { BetterAuthIdentityProvider } from "./infrastructure/auth/better-auth-identity";
 import { PrismaIdentityRepository } from "./infrastructure/database/prisma-identity.repository";
+import { PrismaMediaRepository } from "./infrastructure/database/prisma-media.repository";
 import { PrismaBootcampRepository } from "./infrastructure/database/prisma-bootcamp.repository";
 import { PrismaEnrollmentRepository } from "./infrastructure/database/prisma-enrollment.repository";
 import { PrismaResearchContentRepository } from "./infrastructure/database/prisma-research-content.repository";
 import { PrismaWebinarRepository } from "./infrastructure/database/prisma-webinar.repository";
+import { SupabaseStorageAdapter } from "./infrastructure/storage/supabase-storage.adapter";
 import { ResearchContentService } from "./modules/content/content.service";
 import { BootcampService } from "./modules/bootcamp/bootcamp.service";
 import { EnrollmentService } from "./modules/enrollment/enrollment.service";
 import { WebinarService } from "./modules/webinar/webinar.service";
+import { MediaService } from "./modules/media/media.service";
 import { createIdentityRouter } from "./transport/http/routes/identity";
 import { createBootcampRouter } from "./transport/http/routes/bootcamp";
 import { createEnrollmentRouter } from "./transport/http/routes/enrollment";
 import { createResearchContentRouter } from "./transport/http/routes/content";
 import { createWebinarRouter } from "./transport/http/routes/webinar";
+import { createMediaRouter } from "./transport/http/routes/media";
+import { serverConfig } from "./config";
 
 export const identityRepository = new PrismaIdentityRepository();
 
@@ -45,6 +50,9 @@ const contentRepository = new PrismaResearchContentRepository();
 const contentService = new ResearchContentService(contentRepository);
 const webinarRepository = new PrismaWebinarRepository();
 const webinarService = new WebinarService(webinarRepository);
+const mediaRepository = new PrismaMediaRepository();
+const fileStorage = new SupabaseStorageAdapter(serverConfig.storage);
+const mediaService = new MediaService(mediaRepository, fileStorage);
 
 const resolveSessionUser = async (headers: Parameters<typeof fromNodeHeaders>[0]) => {
   const session = await auth.api.getSession({ headers: fromNodeHeaders(headers) });
@@ -78,6 +86,11 @@ export const webinarRouter: Router = createWebinarRouter({
   identityRepository,
   resolveSessionUser,
   webinarService,
+});
+export const mediaRouter: Router = createMediaRouter({
+  identityRepository,
+  mediaService,
+  resolveSessionUser,
 });
 
 export async function checkDatabase() {

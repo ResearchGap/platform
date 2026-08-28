@@ -624,10 +624,20 @@ Storage Adapter
 Initial implementation may be:
 
 ```text
-FileStorage
-    ↓
+HTTP / Application
+        ↓
+MediaService
+        ↓
+FileStorage port
+        ↑
 SupabaseStorageAdapter
+        ↓
+Supabase Storage
 ```
+
+Supabase Storage is the current infrastructure provider, not an application dependency. Only the
+infrastructure adapter may depend on the Supabase SDK. Feature services and HTTP clients continue
+to use logical `MediaAsset` identifiers and provider-independent media DTOs.
 
 Future implementations may include:
 
@@ -636,6 +646,8 @@ S3StorageAdapter
 MinIOStorageAdapter
 LocalStorageAdapter
 ```
+
+These adapters may replace Supabase Storage without changing `MediaService` or feature services.
 
 Business modules should not depend on Supabase bucket conventions or provider-specific URLs.
 
