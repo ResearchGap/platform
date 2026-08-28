@@ -13,7 +13,9 @@ export default async function AccountPage() {
   }
   if (
     context.account.access.accountStatus === "ACTIVE" &&
-    ["MENTEE", "MENTOR", "COO", "CMO", "SUPERADMIN"].includes(context.account.access.roleCode)
+    ["MENTEE", "MENTOR", "CEO", "COO", "CMO", "SUPERADMIN"].includes(
+      context.account.access.roleCode,
+    )
   ) {
     redirect("/dashboard");
   }

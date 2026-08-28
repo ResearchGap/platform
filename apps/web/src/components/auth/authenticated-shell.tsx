@@ -61,6 +61,14 @@ const cmoNavigation = [
   { href: "/marketing/visuals" as Route, label: "Program visuals", icon: Images },
 ] as const;
 
+const ceoNavigation = [
+  { href: "/dashboard", label: "Executive Dashboard", icon: LayoutDashboard },
+  { href: "/bootcamps", label: "Bootcamps", icon: BookOpenCheck },
+  { href: "/webinars", label: "Webinars", icon: CalendarDays },
+  { href: "/content", label: "Research Content", icon: Newspaper },
+  { href: "/profile", label: "Profile", icon: UserRound },
+] as const;
+
 function Brand() {
   return (
     <Link href="/dashboard" className="flex items-center gap-2 font-semibold tracking-tight">
@@ -83,16 +91,19 @@ export function AuthenticatedShell({
   const isSuperadmin = account.access.roleCode === "SUPERADMIN";
   const isCoo = account.access.roleCode === "COO";
   const isCmo = account.access.roleCode === "CMO";
+  const isCeo = account.access.roleCode === "CEO";
   const navigation = isSuperadmin
     ? superadminNavigation
     : isCoo
       ? cooNavigation
       : isCmo
         ? cmoNavigation
-        : isMentor
-          ? mentorNavigation
-          : menteeNavigation;
-  const navigationLabel = `${isSuperadmin ? "Superadmin" : isCoo ? "COO" : isCmo ? "CMO" : isMentor ? "Mentor" : "Mentee"} navigation`;
+        : isCeo
+          ? ceoNavigation
+          : isMentor
+            ? mentorNavigation
+            : menteeNavigation;
+  const navigationLabel = `${isSuperadmin ? "Superadmin" : isCoo ? "COO" : isCmo ? "CMO" : isCeo ? "CEO" : isMentor ? "Mentor" : "Mentee"} navigation`;
   const initials = account.user.name
     .split(" ")
     .slice(0, 2)
