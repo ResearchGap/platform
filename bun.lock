@@ -42,6 +42,7 @@
       "name": "web",
       "version": "0.1.0",
       "dependencies": {
+        "@platform/auth": "workspace:*",
         "@platform/env": "workspace:*",
         "@platform/ui": "workspace:*",
         "@swc/helpers": "^0.5.23",

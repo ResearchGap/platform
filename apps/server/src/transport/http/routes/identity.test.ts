@@ -108,7 +108,7 @@ describe("identity HTTP authorization", () => {
         email: "admin@example.com",
         kind: "STAFF",
         name: "Admin",
-        password: "safe-password",
+        password: "Safe-password1",
         requestedRoleCode: ROLES.SUPERADMIN,
       }),
     });

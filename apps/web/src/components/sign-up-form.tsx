@@ -1,5 +1,12 @@
 "use client";
 
+import {
+  PASSWORD_MAX_LENGTH,
+  PASSWORD_MIN_LENGTH,
+  PASSWORD_POLICY_ERROR,
+  PASSWORD_REQUIREMENTS,
+  satisfiesPasswordPolicy,
+} from "@platform/auth/password-policy";
 import { Alert, AlertDescription, AlertTitle } from "@platform/ui/components/alert";
 import { Button, buttonVariants } from "@platform/ui/components/button";
 import {
@@ -48,12 +55,22 @@ const labels: Record<RegistrationKind, { description: string; title: string }> =
   },
 };
 
-const registrationSchema = z.object({
-  name: z.string().trim().min(2, "Name must be at least 2 characters").max(100),
-  email: z.email("Enter a valid email address"),
-  password: z.string().min(8, "Password must be at least 8 characters").max(128),
-  requestedRoleCode: z.enum(["CEO", "COO", "CMO"]),
-});
+const registrationSchema = z
+  .object({
+    name: z.string().trim().min(2, "Name must be at least 2 characters").max(100),
+    email: z.email("Enter a valid email address"),
+    password: z
+      .string()
+      .min(PASSWORD_MIN_LENGTH, `Password must be at least ${PASSWORD_MIN_LENGTH} characters`)
+      .max(PASSWORD_MAX_LENGTH)
+      .refine(satisfiesPasswordPolicy, PASSWORD_POLICY_ERROR),
+    confirmPassword: z.string().min(1, "Confirm your password"),
+    requestedRoleCode: z.enum(["CEO", "COO", "CMO"]),
+  })
+  .refine((value) => value.password === value.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  });
 
 export default function SignUpForm({ kind }: { kind: RegistrationKind }) {
   const router = useRouter();
@@ -63,6 +80,7 @@ export default function SignUpForm({ kind }: { kind: RegistrationKind }) {
       name: "",
       email: "",
       password: "",
+      confirmPassword: "",
       requestedRoleCode: "COO" as StaffRole,
     },
     validators: { onSubmit: registrationSchema },
@@ -177,7 +195,26 @@ export default function SignUpForm({ kind }: { kind: RegistrationKind }) {
                   onChange={(event) => field.handleChange(event.target.value)}
                   aria-invalid={field.state.meta.errors.length > 0}
                 />
-                <FieldDescription>Use at least 8 characters.</FieldDescription>
+                <FieldDescription>{PASSWORD_REQUIREMENTS}</FieldDescription>
+                <FieldError errors={field.state.meta.errors} />
+              </Field>
+            )}
+          </form.Field>
+
+          <form.Field name="confirmPassword">
+            {(field) => (
+              <Field data-invalid={field.state.meta.errors.length > 0}>
+                <FieldLabel htmlFor={field.name}>Confirm password</FieldLabel>
+                <Input
+                  id={field.name}
+                  name={field.name}
+                  type="password"
+                  autoComplete="new-password"
+                  value={field.state.value}
+                  onBlur={field.handleBlur}
+                  onChange={(event) => field.handleChange(event.target.value)}
+                  aria-invalid={field.state.meta.errors.length > 0}
+                />
                 <FieldError errors={field.state.meta.errors} />
               </Field>
             )}

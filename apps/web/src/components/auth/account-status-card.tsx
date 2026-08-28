@@ -7,6 +7,7 @@ import Link from "next/link";
 import type { CurrentAccount } from "@/lib/api/mentee-types";
 
 import { LogoutButton } from "./logout-button";
+import { RoleBadge } from "./role-badge";
 
 function accountState(account: CurrentAccount) {
   if (account.access.accountStatus === "SUSPENDED") {
@@ -66,8 +67,9 @@ export function AccountStatusCard({ account }: { account: CurrentAccount }) {
         <p className="text-sm leading-6 text-muted-foreground">{state.description}</p>
         <Alert>
           <AlertTitle>{account.user.name}</AlertTitle>
-          <AlertDescription>
-            {account.user.email} · {account.access.roleCode}
+          <AlertDescription className="flex flex-wrap items-center gap-2">
+            <span>{account.user.email}</span>
+            <RoleBadge role={account.access.roleCode} />
           </AlertDescription>
         </Alert>
         <div className="flex flex-wrap gap-3">

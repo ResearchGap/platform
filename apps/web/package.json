@@ -12,6 +12,7 @@
     "start": "next start"
   },
   "dependencies": {
+    "@platform/auth": "workspace:*",
     "@platform/env": "workspace:*",
     "@platform/ui": "workspace:*",
     "@swc/helpers": "^0.5.23",

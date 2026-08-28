@@ -1,4 +1,3 @@
-import { Badge } from "@platform/ui/components/badge";
 import {
   Card,
   CardContent,
@@ -8,6 +7,7 @@ import {
 } from "@platform/ui/components/card";
 import type { Metadata } from "next";
 
+import { RoleBadge } from "@/components/auth/role-badge";
 import { ProfileForm } from "@/components/mentee/profile-form";
 import { PageHeading } from "@/components/public/page-heading";
 import { getServerAuthContext } from "@/lib/server-auth";
@@ -31,7 +31,7 @@ export default async function ProfilePage() {
         <CardHeader>
           <div className="flex flex-wrap items-center gap-2">
             <CardTitle>{context.account.user.name}</CardTitle>
-            <Badge variant="secondary">Mentee</Badge>
+            <RoleBadge role={context.account.access.roleCode} />
           </div>
           <CardDescription>{context.account.user.email}</CardDescription>
         </CardHeader>

@@ -2,6 +2,8 @@ import { buttonVariants } from "@platform/ui/components/button";
 import { BookOpenText, Menu } from "lucide-react";
 import Link from "next/link";
 
+import { getServerSession } from "@/lib/server-auth";
+
 const navigation = [
   { href: "/", label: "Home" },
   { href: "/content", label: "Research Content" },
@@ -36,7 +38,14 @@ function NavigationLinks({ mobile = false }: { mobile?: boolean }) {
   ));
 }
 
-export function PublicShell({ children }: { children: React.ReactNode }) {
+export async function PublicShell({ children }: { children: React.ReactNode }) {
+  let isAuthenticated = false;
+  try {
+    isAuthenticated = Boolean((await getServerSession())?.user);
+  } catch {
+    // Public pages remain available when session lookup is temporarily unavailable.
+  }
+
   return (
     <div className="flex min-h-svh flex-col bg-background">
       <header className="sticky top-0 z-20 border-b bg-background/95 backdrop-blur">
@@ -46,12 +55,20 @@ export function PublicShell({ children }: { children: React.ReactNode }) {
             <NavigationLinks />
           </nav>
           <div className="hidden items-center gap-2 md:flex">
-            <Link href="/login" className={buttonVariants({ variant: "ghost" })}>
-              Log in
-            </Link>
-            <Link href="/register" className={buttonVariants({ variant: "brand" })}>
-              Register
-            </Link>
+            {isAuthenticated ? (
+              <Link href="/account" className={buttonVariants({ variant: "brand" })}>
+                Open application
+              </Link>
+            ) : (
+              <>
+                <Link href="/login" className={buttonVariants({ variant: "ghost" })}>
+                  Log in
+                </Link>
+                <Link href="/register" className={buttonVariants({ variant: "brand" })}>
+                  Register
+                </Link>
+              </>
+            )}
           </div>
           <details className="relative md:hidden">
             <summary
@@ -63,18 +80,29 @@ export function PublicShell({ children }: { children: React.ReactNode }) {
             <div className="absolute right-0 mt-2 w-64 rounded-xl border bg-card p-3 shadow-lg">
               <nav className="flex flex-col gap-1" aria-label="Mobile navigation">
                 <NavigationLinks mobile />
-                <Link
-                  href="/login"
-                  className={buttonVariants({ variant: "outline", className: "mt-2 w-full" })}
-                >
-                  Log in
-                </Link>
-                <Link
-                  href="/register"
-                  className={buttonVariants({ variant: "brand", className: "w-full" })}
-                >
-                  Register
-                </Link>
+                {isAuthenticated ? (
+                  <Link
+                    href="/account"
+                    className={buttonVariants({ variant: "brand", className: "mt-2 w-full" })}
+                  >
+                    Open application
+                  </Link>
+                ) : (
+                  <>
+                    <Link
+                      href="/login"
+                      className={buttonVariants({ variant: "outline", className: "mt-2 w-full" })}
+                    >
+                      Log in
+                    </Link>
+                    <Link
+                      href="/register"
+                      className={buttonVariants({ variant: "brand", className: "w-full" })}
+                    >
+                      Register
+                    </Link>
+                  </>
+                )}
               </nav>
             </div>
           </details>

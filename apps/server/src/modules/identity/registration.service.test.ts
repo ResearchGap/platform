@@ -74,7 +74,7 @@ function createService() {
 const credentials = {
   name: "Research User",
   email: "user@example.com",
-  password: "safe-password",
+  password: "Safe-password1",
 } as const;
 
 describe("registration initialization", () => {

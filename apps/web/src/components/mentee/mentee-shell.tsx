@@ -14,6 +14,7 @@ import Link from "next/link";
 
 import type { CurrentAccount } from "@/lib/api/mentee-types";
 
+import { AuthenticatedNavigation } from "../auth/authenticated-navigation";
 import { LogoutButton } from "../auth/logout-button";
 
 const navigation = [
@@ -36,23 +37,6 @@ function Brand() {
   );
 }
 
-function NavLinks({ mobile = false }: { mobile?: boolean }) {
-  return navigation.map(({ href, icon: Icon, label }) => (
-    <Link
-      key={href}
-      href={href}
-      className={
-        mobile
-          ? "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium hover:bg-muted hover:text-primary"
-          : "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-primary"
-      }
-    >
-      <Icon aria-hidden="true" />
-      {label}
-    </Link>
-  ));
-}
-
 export function MenteeShell({
   account,
   children,
@@ -68,31 +52,11 @@ export function MenteeShell({
     .toUpperCase();
 
   return (
-    <div className="min-h-svh bg-muted/30">
-      <header className="sticky top-0 z-20 border-b bg-background/95 backdrop-blur md:hidden">
-        <div className="flex h-16 items-center justify-between px-4">
-          <Brand />
-          <details className="relative">
-            <summary
-              className={buttonVariants({ variant: "outline", size: "icon" })}
-              aria-label="Open application navigation"
-            >
-              <Menu aria-hidden="true" />
-            </summary>
-            <div className="absolute right-0 mt-2 w-72 rounded-xl border bg-card p-3 shadow-lg">
-              <nav className="flex flex-col gap-1" aria-label="Mentee navigation">
-                <NavLinks mobile />
-                <LogoutButton />
-              </nav>
-            </div>
-          </details>
-        </div>
-      </header>
-
-      <aside className="fixed inset-y-0 left-0 hidden w-64 flex-col border-r bg-background px-4 py-6 md:flex">
+    <div className="min-h-svh bg-muted/30 md:flex">
+      <aside className="sticky top-0 hidden h-svh w-64 shrink-0 flex-col border-r bg-background px-4 py-6 md:flex">
         <Brand />
         <nav className="mt-8 flex flex-1 flex-col gap-1" aria-label="Mentee navigation">
-          <NavLinks />
+          <AuthenticatedNavigation items={navigation} />
         </nav>
         <div className="flex items-center gap-3 border-t pt-4">
           <Avatar>
@@ -107,9 +71,29 @@ export function MenteeShell({
         </div>
       </aside>
 
-      <main className="md:pl-64">
-        <div className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 lg:px-8">{children}</div>
-      </main>
+      <div className="min-w-0 flex-1">
+        <header className="sticky top-0 z-20 border-b bg-background/95 backdrop-blur md:hidden">
+          <div className="flex h-16 items-center justify-between px-4">
+            <Brand />
+            <details className="relative">
+              <summary
+                className={buttonVariants({ variant: "outline", size: "icon" })}
+                aria-label="Open application navigation"
+              >
+                <Menu aria-hidden="true" />
+              </summary>
+              <div className="absolute right-0 mt-2 w-72 rounded-xl border bg-card p-3 shadow-lg">
+                <nav className="flex flex-col gap-1" aria-label="Mentee navigation">
+                  <AuthenticatedNavigation items={navigation} mobile />
+                  <LogoutButton />
+                </nav>
+              </div>
+            </details>
+          </div>
+        </header>
+
+        <main className="min-w-0 px-4 py-8 sm:px-6 lg:px-8 xl:px-10">{children}</main>
+      </div>
     </div>
   );
 }
