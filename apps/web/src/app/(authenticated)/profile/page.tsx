@@ -19,13 +19,18 @@ export default async function ProfilePage() {
   if (!context) {
     return null;
   }
+  const isMentor = context.account.access.roleCode === "MENTOR";
 
   return (
     <div className="flex max-w-3xl flex-col gap-8">
       <PageHeading
         eyebrow="Account"
-        title="Mentee profile"
-        description="Keep your ResearchGap application profile information up to date."
+        title={`${isMentor ? "Mentor" : "Mentee"} profile`}
+        description={
+          isMentor
+            ? "Keep your professional and ResearchGap profile information up to date."
+            : "Keep your ResearchGap application profile information up to date."
+        }
       />
       <Card>
         <CardHeader>
@@ -36,7 +41,7 @@ export default async function ProfilePage() {
           <CardDescription>{context.account.user.email}</CardDescription>
         </CardHeader>
         <CardContent>
-          <ProfileForm profile={context.account.profile} />
+          <ProfileForm profile={context.account.profile} role={context.account.access.roleCode} />
         </CardContent>
       </Card>
     </div>

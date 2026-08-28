@@ -2,9 +2,11 @@ import { Avatar, AvatarFallback, AvatarImage } from "@platform/ui/components/ava
 import { buttonVariants } from "@platform/ui/components/button";
 import {
   BookOpen,
+  BookOpenCheck,
   BookOpenText,
   CalendarDays,
   GraduationCap,
+  KeyRound,
   LayoutDashboard,
   Menu,
   Newspaper,
@@ -14,15 +16,24 @@ import Link from "next/link";
 
 import type { CurrentAccount } from "@/lib/api/mentee-types";
 
-import { AuthenticatedNavigation } from "../auth/authenticated-navigation";
-import { LogoutButton } from "../auth/logout-button";
+import { AuthenticatedNavigation } from "./authenticated-navigation";
+import { LogoutButton } from "./logout-button";
 
-const navigation = [
+const menteeNavigation = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/my-bootcamps", label: "My Bootcamps", icon: GraduationCap },
   { href: "/bootcamps", label: "Browse Bootcamps", icon: BookOpen },
   { href: "/content", label: "Research Content", icon: Newspaper },
   { href: "/webinars", label: "Webinars", icon: CalendarDays },
+  { href: "/profile", label: "Profile", icon: UserRound },
+] as const;
+
+const mentorNavigation = [
+  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/mentor/bootcamps", label: "Bootcamps", icon: BookOpenCheck },
+  { href: "/mentor/bootcamps/join", label: "Join Bootcamp", icon: KeyRound },
+  { href: "/mentor/content", label: "Research Content", icon: Newspaper },
+  { href: "/mentor/webinars", label: "Webinars", icon: CalendarDays },
   { href: "/profile", label: "Profile", icon: UserRound },
 ] as const;
 
@@ -37,13 +48,16 @@ function Brand() {
   );
 }
 
-export function MenteeShell({
+export function AuthenticatedShell({
   account,
   children,
 }: {
   account: CurrentAccount;
   children: React.ReactNode;
 }) {
+  const isMentor = account.access.roleCode === "MENTOR";
+  const navigation = isMentor ? mentorNavigation : menteeNavigation;
+  const navigationLabel = `${isMentor ? "Mentor" : "Mentee"} navigation`;
   const initials = account.user.name
     .split(" ")
     .slice(0, 2)
@@ -55,7 +69,7 @@ export function MenteeShell({
     <div className="min-h-svh bg-muted/30 md:flex">
       <aside className="sticky top-0 hidden h-svh w-64 shrink-0 flex-col border-r bg-background px-4 py-6 md:flex">
         <Brand />
-        <nav className="mt-8 flex flex-1 flex-col gap-1" aria-label="Mentee navigation">
+        <nav className="mt-8 flex flex-1 flex-col gap-1" aria-label={navigationLabel}>
           <AuthenticatedNavigation items={navigation} />
         </nav>
         <div className="flex items-center gap-3 border-t pt-4">
@@ -83,7 +97,7 @@ export function MenteeShell({
                 <Menu aria-hidden="true" />
               </summary>
               <div className="absolute right-0 mt-2 w-72 rounded-xl border bg-card p-3 shadow-lg">
-                <nav className="flex flex-col gap-1" aria-label="Mentee navigation">
+                <nav className="flex flex-col gap-1" aria-label={navigationLabel}>
                   <AuthenticatedNavigation items={navigation} mobile />
                   <LogoutButton />
                 </nav>

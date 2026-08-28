@@ -14,16 +14,19 @@ import { z } from "zod";
 
 import { updateCurrentProfile } from "@/lib/api/account";
 import { ApiError } from "@/lib/api/client";
-import type { UserProfile } from "@/lib/api/mentee-types";
+import type { RoleCode, UserProfile } from "@/lib/api/mentee-types";
 
 const profileSchema = z.object({
   nickname: z.string().trim().max(100),
   whatsapp: z.string().trim().max(50),
   institution: z.string().trim().max(200),
   researchField: z.string().trim().max(200),
+  affiliation: z.string().trim().max(200),
+  biography: z.string().trim().max(2_000),
+  expertise: z.string().trim().max(2_000),
 });
 
-export function ProfileForm({ profile }: { profile: UserProfile }) {
+export function ProfileForm({ profile, role }: { profile: UserProfile; role: RoleCode }) {
   const router = useRouter();
   const [requestError, setRequestError] = useState<string | null>(null);
   const form = useForm({
@@ -32,6 +35,9 @@ export function ProfileForm({ profile }: { profile: UserProfile }) {
       whatsapp: profile.whatsapp ?? "",
       institution: profile.institution ?? "",
       researchField: profile.researchField ?? "",
+      affiliation: profile.affiliation ?? "",
+      biography: profile.biography ?? "",
+      expertise: profile.expertise ?? "",
     },
     validators: { onSubmit: profileSchema },
     onSubmit: async ({ value }) => {
@@ -42,6 +48,13 @@ export function ProfileForm({ profile }: { profile: UserProfile }) {
           whatsapp: value.whatsapp || null,
           institution: value.institution || null,
           researchField: value.researchField || null,
+          ...(role === "MENTOR"
+            ? {
+                affiliation: value.affiliation || null,
+                biography: value.biography || null,
+                expertise: value.expertise || null,
+              }
+            : {}),
         });
         toast.success("Profile updated");
         router.refresh();
@@ -75,6 +88,13 @@ export function ProfileForm({ profile }: { profile: UserProfile }) {
             ["whatsapp", "WhatsApp", "Contact number"],
             ["institution", "Institution", "University or organization"],
             ["researchField", "Research field", "Your primary field of interest"],
+            ...(role === "MENTOR"
+              ? ([
+                  ["affiliation", "Affiliation", "Professional or academic affiliation"],
+                  ["expertise", "Expertise", "Areas of expertise"],
+                  ["biography", "Biography", "Short professional biography"],
+                ] as const)
+              : []),
           ] as const
         ).map(([name, label, placeholder]) => (
           <form.Field key={name} name={name}>

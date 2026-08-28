@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 
-import { MenteeShell } from "@/components/mentee/mentee-shell";
+import { AuthenticatedShell } from "@/components/auth/authenticated-shell";
 import { getServerAuthContext } from "@/lib/server-auth";
 
 export default async function AuthenticatedLayout({ children }: { children: React.ReactNode }) {
@@ -10,10 +10,10 @@ export default async function AuthenticatedLayout({ children }: { children: Reac
   }
   if (
     context.account.access.accountStatus !== "ACTIVE" ||
-    context.account.access.roleCode !== "MENTEE"
+    (context.account.access.roleCode !== "MENTEE" && context.account.access.roleCode !== "MENTOR")
   ) {
     redirect("/account");
   }
 
-  return <MenteeShell account={context.account}>{children}</MenteeShell>;
+  return <AuthenticatedShell account={context.account}>{children}</AuthenticatedShell>;
 }

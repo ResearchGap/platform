@@ -11,11 +11,12 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { MyBootcampCard } from "@/components/mentee/my-bootcamp-card";
+import { MentorDashboard } from "@/components/mentor/mentor-dashboard";
 import { PageHeading } from "@/components/public/page-heading";
 import { PublicEmptyState, PublicErrorState } from "@/components/public/public-states";
 import { listMyBootcamps } from "@/lib/api/mentee";
 import type { MenteePage, MyBootcampEnrollment } from "@/lib/api/mentee-types";
-import { authenticatedRequestInit, getServerSession } from "@/lib/server-auth";
+import { authenticatedRequestInit, getServerAuthContext } from "@/lib/server-auth";
 
 export const metadata: Metadata = { title: "Dashboard" };
 
@@ -41,10 +42,14 @@ const discovery = [
 ] as const;
 
 export default async function DashboardPage() {
-  const [session, requestInit] = await Promise.all([
-    getServerSession(),
+  const [authContext, requestInit] = await Promise.all([
+    getServerAuthContext(),
     authenticatedRequestInit(),
   ]);
+
+  if (authContext?.account.access.roleCode === "MENTOR") {
+    return <MentorDashboard name={authContext.session.user.name} requestInit={requestInit} />;
+  }
 
   let enrollments: MenteePage<MyBootcampEnrollment> | null;
   try {
@@ -57,7 +62,7 @@ export default async function DashboardPage() {
     <div className="flex flex-col gap-10">
       <PageHeading
         eyebrow="Mentee dashboard"
-        title={`Welcome back${session?.user.name ? `, ${session.user.name}` : ""}`}
+        title={`Welcome back${authContext?.session.user.name ? `, ${authContext.session.user.name}` : ""}`}
         description="Continue your enrolled Bootcamps or discover another ResearchGap learning experience."
       />
 

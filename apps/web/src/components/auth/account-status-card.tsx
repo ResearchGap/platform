@@ -44,7 +44,7 @@ function accountState(account: CurrentAccount) {
     icon: ShieldCheck,
     title: "Account active",
     description:
-      "Your account is active. The experience for this role will be available in Phase 5C.",
+      "Your account is active. Staff application experiences will be available in Phase 6.",
   };
 }
 
