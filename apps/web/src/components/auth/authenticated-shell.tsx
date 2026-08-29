@@ -1,73 +1,60 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@platform/ui/components/avatar";
 import { buttonVariants } from "@platform/ui/components/button";
-import {
-  BookOpen,
-  BookOpenCheck,
-  BookOpenText,
-  CalendarDays,
-  ClipboardList,
-  GraduationCap,
-  KeyRound,
-  LayoutDashboard,
-  ShieldCheck,
-  UsersRound,
-  Video,
-  Menu,
-  Newspaper,
-  Images,
-  UserRound,
-} from "lucide-react";
+import { BookOpenText, Menu } from "lucide-react";
 import Link from "next/link";
 import type { Route } from "next";
 
 import type { CurrentAccount } from "@/lib/api/mentee-types";
 
-import { AuthenticatedNavigation } from "./authenticated-navigation";
+import {
+  AuthenticatedNavigation,
+  type AuthenticatedNavigationItem,
+} from "./authenticated-navigation";
 import { LogoutButton } from "./logout-button";
 
 const menteeNavigation = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/my-bootcamps", label: "My Bootcamps", icon: GraduationCap },
-  { href: "/bootcamps", label: "Browse Bootcamps", icon: BookOpen },
-  { href: "/content", label: "Research Content", icon: Newspaper },
-  { href: "/webinars", label: "Webinars", icon: CalendarDays },
-  { href: "/profile", label: "Profile", icon: UserRound },
-] as const;
+  { href: "/dashboard", label: "Dashboard", icon: "layout-dashboard" },
+  { href: "/my-bootcamps", label: "My Bootcamps", icon: "graduation-cap" },
+  { href: "/bootcamps", label: "Browse Bootcamps", icon: "book-open" },
+  { href: "/content", label: "Research Content", icon: "newspaper" },
+  { href: "/webinars", label: "Webinars", icon: "calendar-days" },
+  { href: "/profile", label: "Profile", icon: "user-round" },
+] as const satisfies readonly AuthenticatedNavigationItem[];
 
 const mentorNavigation = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/mentor/bootcamps", label: "Bootcamps", icon: BookOpenCheck },
-  { href: "/mentor/bootcamps/join", label: "Join Bootcamp", icon: KeyRound },
-  { href: "/mentor/content", label: "Research Content", icon: Newspaper },
-  { href: "/mentor/webinars", label: "Webinars", icon: CalendarDays },
-  { href: "/profile", label: "Profile", icon: UserRound },
-] as const;
+  { href: "/dashboard", label: "Dashboard", icon: "layout-dashboard" },
+  { href: "/mentor/bootcamps", label: "Bootcamps", icon: "book-open-check" },
+  { href: "/mentor/bootcamps/join", label: "Join Bootcamp", icon: "key-round" },
+  { href: "/mentor/content", label: "Research Content", icon: "newspaper" },
+  { href: "/mentor/webinars", label: "Webinars", icon: "calendar-days" },
+  { href: "/profile", label: "Profile", icon: "user-round" },
+] as const satisfies readonly AuthenticatedNavigationItem[];
 
 const superadminNavigation = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/admin/approvals" as Route, label: "Approvals", icon: ShieldCheck },
-  { href: "/admin/users" as Route, label: "Users", icon: UsersRound },
-] as const;
+  { href: "/dashboard", label: "Dashboard", icon: "layout-dashboard" },
+  { href: "/admin/approvals" as Route, label: "Approvals", icon: "shield-check" },
+  { href: "/admin/users" as Route, label: "Users", icon: "users-round" },
+] as const satisfies readonly AuthenticatedNavigationItem[];
 
 const cooNavigation = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/operations/bootcamps" as Route, label: "Bootcamps", icon: ClipboardList },
-  { href: "/operations/webinars" as Route, label: "Webinars", icon: Video },
-] as const;
+  { href: "/dashboard", label: "Dashboard", icon: "layout-dashboard" },
+  { href: "/operations/bootcamps" as Route, label: "Bootcamps", icon: "clipboard-list" },
+  { href: "/operations/webinars" as Route, label: "Webinars", icon: "video" },
+] as const satisfies readonly AuthenticatedNavigationItem[];
 
 const cmoNavigation = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/marketing/content" as Route, label: "Research Content", icon: Newspaper },
-  { href: "/marketing/visuals" as Route, label: "Program visuals", icon: Images },
-] as const;
+  { href: "/dashboard", label: "Dashboard", icon: "layout-dashboard" },
+  { href: "/marketing/content" as Route, label: "Research Content", icon: "newspaper" },
+  { href: "/marketing/visuals" as Route, label: "Program visuals", icon: "images" },
+] as const satisfies readonly AuthenticatedNavigationItem[];
 
 const ceoNavigation = [
-  { href: "/dashboard", label: "Executive Dashboard", icon: LayoutDashboard },
-  { href: "/bootcamps", label: "Bootcamps", icon: BookOpenCheck },
-  { href: "/webinars", label: "Webinars", icon: CalendarDays },
-  { href: "/content", label: "Research Content", icon: Newspaper },
-  { href: "/profile", label: "Profile", icon: UserRound },
-] as const;
+  { href: "/dashboard", label: "Executive Dashboard", icon: "layout-dashboard" },
+  { href: "/bootcamps", label: "Bootcamps", icon: "book-open-check" },
+  { href: "/webinars", label: "Webinars", icon: "calendar-days" },
+  { href: "/content", label: "Research Content", icon: "newspaper" },
+  { href: "/profile", label: "Profile", icon: "user-round" },
+] as const satisfies readonly AuthenticatedNavigationItem[];
 
 function Brand() {
   return (

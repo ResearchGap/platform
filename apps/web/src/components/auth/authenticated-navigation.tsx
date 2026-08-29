@@ -1,14 +1,46 @@
 "use client";
 
 import { cn } from "@platform/ui/lib/utils";
-import type { LucideIcon } from "lucide-react";
+import {
+  BookOpen,
+  BookOpenCheck,
+  CalendarDays,
+  ClipboardList,
+  GraduationCap,
+  Images,
+  KeyRound,
+  LayoutDashboard,
+  Newspaper,
+  ShieldCheck,
+  UserRound,
+  UsersRound,
+  Video,
+} from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+const navigationIcons = {
+  "book-open": BookOpen,
+  "book-open-check": BookOpenCheck,
+  "calendar-days": CalendarDays,
+  "clipboard-list": ClipboardList,
+  "graduation-cap": GraduationCap,
+  images: Images,
+  "key-round": KeyRound,
+  "layout-dashboard": LayoutDashboard,
+  newspaper: Newspaper,
+  "shield-check": ShieldCheck,
+  "user-round": UserRound,
+  "users-round": UsersRound,
+  video: Video,
+} as const;
+
+export type AuthenticatedNavigationIcon = keyof typeof navigationIcons;
+
 export interface AuthenticatedNavigationItem {
   href: Route;
-  icon: LucideIcon;
+  icon: AuthenticatedNavigationIcon;
   label: string;
 }
 
@@ -25,8 +57,9 @@ export function AuthenticatedNavigation({
 }) {
   const pathname = usePathname();
 
-  return items.map(({ href, icon: Icon, label }) => {
+  return items.map(({ href, icon, label }) => {
     const isActive = isCurrentRoute(pathname, href);
+    const Icon = navigationIcons[icon];
 
     return (
       <Link
