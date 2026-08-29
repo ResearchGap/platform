@@ -6,7 +6,7 @@ import type {
   ResearchContentStatus,
   ResearchContentSummary,
   UpdateResearchContentInput,
-} from "./content.types";
+} from "./content.types.js";
 
 export interface ResearchContentRepository {
   coverAssetExists(id: string): Promise<boolean>;

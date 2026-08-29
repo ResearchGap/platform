@@ -1,15 +1,15 @@
 import { describe, expect, test } from "bun:test";
 
-import { RESOURCE_SCOPES, RESOURCE_TYPES } from "./access-profiles";
+import { RESOURCE_SCOPES, RESOURCE_TYPES } from "./access-profiles.js";
 import {
   ACCESS_PROFILE_CODES,
   ACCOUNT_STATUSES,
   PERMISSION_EFFECTS,
   ROLES,
   type AuthorizationActor,
-} from "./authorization.types";
-import { AuthorizationError, authorizeResource, can } from "./authorize";
-import { PERMISSIONS } from "./permissions";
+} from "./authorization.types.js";
+import { AuthorizationError, authorizeResource, can } from "./authorize.js";
+import { PERMISSIONS } from "./permissions.js";
 
 function actor(overrides: Partial<AuthorizationActor> = {}): AuthorizationActor {
   return {

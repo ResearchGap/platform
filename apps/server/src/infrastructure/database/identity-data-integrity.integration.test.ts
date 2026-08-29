@@ -5,11 +5,11 @@ import {
   ACCESS_PROFILE_CODES,
   ACCOUNT_STATUSES,
   ROLES,
-} from "../../authorization/authorization.types";
-import { ApprovalService } from "../../modules/identity/approval.service";
-import { InvalidApprovalTransitionError } from "../../modules/identity/identity.errors";
-import { APPROVAL_DECISIONS, APPROVAL_STATUSES } from "../../modules/identity/identity.types";
-import { PrismaIdentityRepository } from "./prisma-identity.repository";
+} from "../../authorization/authorization.types.js";
+import { ApprovalService } from "../../modules/identity/approval.service.js";
+import { InvalidApprovalTransitionError } from "../../modules/identity/identity.errors.js";
+import { APPROVAL_DECISIONS, APPROVAL_STATUSES } from "../../modules/identity/identity.types.js";
+import { PrismaIdentityRepository } from "./prisma-identity.repository.js";
 
 const databaseTest = process.env.RUN_DATABASE_TESTS === "true" ? test : test.skip;
 const createdUserIds: string[] = [];

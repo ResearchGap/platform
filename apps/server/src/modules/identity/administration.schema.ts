@@ -4,9 +4,9 @@ import {
   ACCOUNT_STATUSES,
   PERMISSION_EFFECTS,
   ROLES,
-} from "../../authorization/authorization.types";
-import { isPermission } from "../../authorization/permissions";
-import { APPROVAL_STATUSES } from "./identity.types";
+} from "../../authorization/authorization.types.js";
+import { isPermission } from "../../authorization/permissions.js";
+import { APPROVAL_STATUSES } from "./identity.types.js";
 
 const roleCode = z.enum(Object.values(ROLES));
 const accountStatus = z.enum(Object.values(ACCOUNT_STATUSES));

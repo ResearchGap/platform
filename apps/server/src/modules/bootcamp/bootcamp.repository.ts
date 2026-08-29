@@ -9,8 +9,8 @@ import type {
   CreateBootcampSessionInput,
   UpdateBootcampInput,
   UpdateBootcampSessionInput,
-} from "./bootcamp.types";
-import type { ResourceScope } from "../../authorization/access-profiles";
+} from "./bootcamp.types.js";
+import type { ResourceScope } from "../../authorization/access-profiles.js";
 
 export interface BootcampRepository {
   coverAssetExists(id: string): Promise<boolean>;

@@ -4,13 +4,13 @@ import {
   configuredResourceScope,
   type ResourceScope,
   type ResourceType,
-} from "./access-profiles";
+} from "./access-profiles.js";
 import {
   ACCOUNT_STATUSES,
   PERMISSION_EFFECTS,
   type AuthorizationActor,
-} from "./authorization.types";
-import { isPermission, type Permission } from "./permissions";
+} from "./authorization.types.js";
+import { isPermission, type Permission } from "./permissions.js";
 
 export class AuthorizationError extends Error {
   constructor(message = "You are not authorized to perform this operation") {

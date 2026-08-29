@@ -4,8 +4,8 @@ import type {
   AuthorizationActor,
   PermissionEffect,
   RoleCode,
-} from "../../authorization/authorization.types";
-import type { Permission } from "../../authorization/permissions";
+} from "../../authorization/authorization.types.js";
+import type { Permission } from "../../authorization/permissions.js";
 
 export const APPROVAL_STATUSES = {
   PENDING: "PENDING",

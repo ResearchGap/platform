@@ -1,7 +1,7 @@
-import { ACCOUNT_STATUSES, ROLES, type RoleCode } from "../../authorization/authorization.types";
-import type { IdentityAccessRepository } from "./identity.repository";
-import { RegistrationConsistencyError } from "./identity.errors";
-import type { IdentityProvider, PublicRegistration, RegistrationResult } from "./identity.types";
+import { ACCOUNT_STATUSES, ROLES, type RoleCode } from "../../authorization/authorization.types.js";
+import type { IdentityAccessRepository } from "./identity.repository.js";
+import { RegistrationConsistencyError } from "./identity.errors.js";
+import type { IdentityProvider, PublicRegistration, RegistrationResult } from "./identity.types.js";
 
 function requestedRole(registration: PublicRegistration): RoleCode {
   if (registration.kind === "MENTEE") {

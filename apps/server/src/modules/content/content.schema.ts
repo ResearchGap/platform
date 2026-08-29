@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { RESEARCH_CONTENT_STATUSES, RESEARCH_CONTENT_TYPES } from "./content.types";
+import { RESEARCH_CONTENT_STATUSES, RESEARCH_CONTENT_TYPES } from "./content.types.js";
 
 const titleSchema = z.string().trim().min(1).max(240);
 const slugSchema = z

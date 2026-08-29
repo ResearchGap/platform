@@ -4,20 +4,20 @@ import {
   RESOURCE_SCOPES,
   RESOURCE_TYPES,
   type ResourceScope,
-} from "../../authorization/access-profiles";
-import { AuthorizationError, authorize, authorizeResource } from "../../authorization/authorize";
-import type { AuthorizationActor } from "../../authorization/authorization.types";
-import { PERMISSIONS, type Permission } from "../../authorization/permissions";
-import { BOOTCAMP_STATUSES, type BootcampDetail } from "../bootcamp/bootcamp.types";
-import { BootcampNotEnrollableError, EnrollmentNotFoundError } from "./enrollment.errors";
-import type { EnrollmentRepository } from "./enrollment.repository";
+} from "../../authorization/access-profiles.js";
+import { AuthorizationError, authorize, authorizeResource } from "../../authorization/authorize.js";
+import type { AuthorizationActor } from "../../authorization/authorization.types.js";
+import { PERMISSIONS, type Permission } from "../../authorization/permissions.js";
+import { BOOTCAMP_STATUSES, type BootcampDetail } from "../bootcamp/bootcamp.types.js";
+import { BootcampNotEnrollableError, EnrollmentNotFoundError } from "./enrollment.errors.js";
+import type { EnrollmentRepository } from "./enrollment.repository.js";
 import type {
   CreateEnrollmentKeyInput,
   EligibleMentorListInput,
   EnrollmentKeyPageInput,
   MyBootcampListInput,
   ParticipantListInput,
-} from "./enrollment.types";
+} from "./enrollment.types.js";
 
 function hashEnrollmentKey(rawKey: string): string {
   return createHash("sha256").update(rawKey, "utf8").digest("hex");

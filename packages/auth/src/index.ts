@@ -9,7 +9,7 @@ import {
   PASSWORD_MIN_LENGTH,
   PASSWORD_POLICY_ERROR,
   satisfiesPasswordPolicy,
-} from "./password-policy";
+} from "./password-policy.js";
 
 interface AuthLifecycle {
   onUserCreated?: (user: { id: string }) => Promise<void>;

@@ -1,15 +1,15 @@
-import { authorize } from "../../authorization/authorize";
+import { authorize } from "../../authorization/authorize.js";
 import {
   ACCOUNT_STATUSES,
   ROLES,
   type AccountStatus,
   type AuthorizationActor,
   type RoleCode,
-} from "../../authorization/authorization.types";
-import { PERMISSIONS, type Permission } from "../../authorization/permissions";
-import { InvalidAccountAdministrationError, IdentityNotFoundError } from "./identity.errors";
-import type { IdentityAdministrationRepository } from "./identity.repository";
-import type { ApprovalStatus, CreatePermissionOverrideInput } from "./identity.types";
+} from "../../authorization/authorization.types.js";
+import { PERMISSIONS, type Permission } from "../../authorization/permissions.js";
+import { InvalidAccountAdministrationError, IdentityNotFoundError } from "./identity.errors.js";
+import type { IdentityAdministrationRepository } from "./identity.repository.js";
+import type { ApprovalStatus, CreatePermissionOverrideInput } from "./identity.types.js";
 
 export class IdentityAdministrationService {
   constructor(private readonly repository: IdentityAdministrationRepository) {}

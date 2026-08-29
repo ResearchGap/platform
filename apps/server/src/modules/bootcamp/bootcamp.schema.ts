@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { BOOTCAMP_SESSION_TYPES, BOOTCAMP_STATUSES, BOOTCAMP_TIMINGS } from "./bootcamp.types";
+import { BOOTCAMP_SESSION_TYPES, BOOTCAMP_STATUSES, BOOTCAMP_TIMINGS } from "./bootcamp.types.js";
 
 const titleSchema = z.string().trim().min(1).max(240);
 const slugSchema = z

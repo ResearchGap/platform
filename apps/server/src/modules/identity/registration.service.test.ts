@@ -5,16 +5,16 @@ import {
   ROLES,
   type AuthorizationActor,
   type RoleCode,
-} from "../../authorization/authorization.types";
-import type { IdentityAccessRepository } from "./identity.repository";
-import { publicRegistrationSchema } from "./registration.schema";
-import { RegistrationService } from "./registration.service";
+} from "../../authorization/authorization.types.js";
+import type { IdentityAccessRepository } from "./identity.repository.js";
+import { publicRegistrationSchema } from "./registration.schema.js";
+import { RegistrationService } from "./registration.service.js";
 import type {
   ApprovalDecision,
   ApprovalReviewResult,
   IdentityProvider,
   RegistrationCredentials,
-} from "./identity.types";
+} from "./identity.types.js";
 
 class FakeIdentityProvider implements IdentityProvider {
   deletedUsers: string[] = [];

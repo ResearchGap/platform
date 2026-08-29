@@ -1,6 +1,6 @@
 import { env } from "@platform/env/server";
 
-import { PrismaIdentityRepository } from "../infrastructure/database/prisma-identity.repository";
+import { PrismaIdentityRepository } from "../infrastructure/database/prisma-identity.repository.js";
 
 if (!env.SUPERADMIN_EMAIL) {
   throw new Error("SUPERADMIN_EMAIL must be set explicitly before running this command");

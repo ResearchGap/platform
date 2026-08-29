@@ -2,10 +2,10 @@ import {
   RESOURCE_SCOPES,
   RESOURCE_TYPES,
   type ResourceScope,
-} from "../../authorization/access-profiles";
-import { AuthorizationError, authorizeResource } from "../../authorization/authorize";
-import type { AuthorizationActor } from "../../authorization/authorization.types";
-import { PERMISSIONS } from "../../authorization/permissions";
+} from "../../authorization/access-profiles.js";
+import { AuthorizationError, authorizeResource } from "../../authorization/authorize.js";
+import type { AuthorizationActor } from "../../authorization/authorization.types.js";
+import { PERMISSIONS } from "../../authorization/permissions.js";
 import {
   BootcampConflictError,
   BootcampDateRangeError,
@@ -15,8 +15,8 @@ import {
   BootcampSessionNotFoundError,
   BootcampSessionOrderError,
   InvalidBootcampTransitionError,
-} from "./bootcamp.errors";
-import type { BootcampRepository } from "./bootcamp.repository";
+} from "./bootcamp.errors.js";
+import type { BootcampRepository } from "./bootcamp.repository.js";
 import {
   BOOTCAMP_STATUSES,
   type BootcampDetail,
@@ -30,7 +30,7 @@ import {
   type PublicBootcampSummary,
   type UpdateBootcampInput,
   type UpdateBootcampSessionInput,
-} from "./bootcamp.types";
+} from "./bootcamp.types.js";
 
 function toPublicSummary(bootcamp: BootcampSummary): PublicBootcampSummary {
   if (

@@ -1,7 +1,7 @@
 import prisma from "@platform/db";
 
-import type { MediaRepository } from "../../modules/media/media.repository";
-import type { MediaAssetRecord } from "../../modules/media/media.types";
+import type { MediaRepository } from "../../modules/media/media.repository.js";
+import type { MediaAssetRecord } from "../../modules/media/media.types.js";
 
 const mediaSelect = {
   id: true,

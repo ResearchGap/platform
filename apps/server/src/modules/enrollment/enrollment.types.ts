@@ -3,7 +3,7 @@ import type {
   BootcampPage,
   BootcampSessionDetail,
   BootcampSummary,
-} from "../bootcamp/bootcamp.types";
+} from "../bootcamp/bootcamp.types.js";
 
 export const ENROLLMENT_KEY_AUDIENCES = {
   MENTEE: "MENTEE",

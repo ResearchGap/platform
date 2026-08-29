@@ -1,4 +1,4 @@
-import type { BootcampStatus } from "./bootcamp.types";
+import type { BootcampStatus } from "./bootcamp.types.js";
 
 export class BootcampNotFoundError extends Error {
   constructor(message = "Bootcamp was not found") {

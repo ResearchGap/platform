@@ -1,4 +1,4 @@
-import type { BootcampDetail, BootcampSummary } from "../bootcamp/bootcamp.types";
+import type { BootcampDetail, BootcampSummary } from "../bootcamp/bootcamp.types.js";
 import type {
   BootcampEnrollmentDetail,
   BootcampMentorDetail,
@@ -13,7 +13,7 @@ import type {
   MyBootcampListInput,
   ParticipantDetail,
   ParticipantListInput,
-} from "./enrollment.types";
+} from "./enrollment.types.js";
 
 export interface EnrollmentRepository {
   assignMentor(input: {

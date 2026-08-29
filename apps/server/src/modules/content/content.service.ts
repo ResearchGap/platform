@@ -2,25 +2,25 @@ import {
   RESOURCE_SCOPES,
   RESOURCE_TYPES,
   type ResourceScope,
-} from "../../authorization/access-profiles";
-import { AuthorizationError, authorize, authorizeResource } from "../../authorization/authorize";
-import type { AuthorizationActor } from "../../authorization/authorization.types";
-import { PERMISSIONS } from "../../authorization/permissions";
+} from "../../authorization/access-profiles.js";
+import { AuthorizationError, authorize, authorizeResource } from "../../authorization/authorize.js";
+import type { AuthorizationActor } from "../../authorization/authorization.types.js";
+import { PERMISSIONS } from "../../authorization/permissions.js";
 import {
   ContentConflictError,
   ContentLifecycleError,
   ContentMediaNotFoundError,
   ContentNotFoundError,
   InvalidContentTransitionError,
-} from "./content.errors";
-import type { ResearchContentRepository } from "./content.repository";
+} from "./content.errors.js";
+import type { ResearchContentRepository } from "./content.repository.js";
 import {
   RESEARCH_CONTENT_STATUSES,
   type ContentListInput,
   type CreateResearchContentInput,
   type ResearchContentDetail,
   type UpdateResearchContentInput,
-} from "./content.types";
+} from "./content.types.js";
 
 export class ResearchContentService {
   constructor(

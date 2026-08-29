@@ -1,21 +1,21 @@
 import prisma from "@platform/db";
 
-import { ACCOUNT_STATUSES, ROLES } from "../../authorization/authorization.types";
+import { ACCOUNT_STATUSES, ROLES } from "../../authorization/authorization.types.js";
 import {
   BOOTCAMP_STATUSES,
   type BootcampDetail,
   type BootcampSessionDetail,
   type BootcampSummary,
-} from "../../modules/bootcamp/bootcamp.types";
+} from "../../modules/bootcamp/bootcamp.types.js";
 import {
   BootcampNotEnrollableError,
   EnrollmentConflictError,
   EnrollmentEligibilityError,
   EnrollmentKeyInvalidError,
   EnrollmentKeyUnavailableError,
-} from "../../modules/enrollment/enrollment.errors";
-import { evaluateEnrollmentKeyStatus } from "../../modules/enrollment/enrollment-key-status";
-import type { EnrollmentRepository } from "../../modules/enrollment/enrollment.repository";
+} from "../../modules/enrollment/enrollment.errors.js";
+import { evaluateEnrollmentKeyStatus } from "../../modules/enrollment/enrollment-key-status.js";
+import type { EnrollmentRepository } from "../../modules/enrollment/enrollment.repository.js";
 import {
   BOOTCAMP_ENROLLMENT_STATUSES,
   BOOTCAMP_MENTOR_SOURCES,
@@ -37,7 +37,7 @@ import {
   type ParticipantDetail,
   type ParticipantListInput,
   type PersistedEnrollmentKeyStatus,
-} from "../../modules/enrollment/enrollment.types";
+} from "../../modules/enrollment/enrollment.types.js";
 
 const personSelect = { id: true, name: true } as const;
 const personWithEmailSelect = { id: true, name: true, email: true } as const;

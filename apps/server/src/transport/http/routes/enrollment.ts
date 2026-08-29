@@ -1,8 +1,8 @@
 import { Router, type ErrorRequestHandler, type Response } from "express";
 import { z } from "zod";
 
-import { AuthorizationError } from "../../../authorization/authorize";
-import { PERMISSIONS } from "../../../authorization/permissions";
+import { AuthorizationError } from "../../../authorization/authorize.js";
+import { PERMISSIONS } from "../../../authorization/permissions.js";
 import {
   BootcampNotEnrollableError,
   EnrollmentConflictError,
@@ -10,7 +10,7 @@ import {
   EnrollmentKeyInvalidError,
   EnrollmentKeyUnavailableError,
   EnrollmentNotFoundError,
-} from "../../../modules/enrollment/enrollment.errors";
+} from "../../../modules/enrollment/enrollment.errors.js";
 import {
   assignMentorSchema,
   createEnrollmentKeySchema,
@@ -21,16 +21,16 @@ import {
   myBootcampListSchema,
   participantListSchema,
   redeemEnrollmentKeySchema,
-} from "../../../modules/enrollment/enrollment.schema";
-import type { EnrollmentService } from "../../../modules/enrollment/enrollment.service";
-import type { IdentityAccessRepository } from "../../../modules/identity/identity.repository";
+} from "../../../modules/enrollment/enrollment.schema.js";
+import type { EnrollmentService } from "../../../modules/enrollment/enrollment.service.js";
+import type { IdentityAccessRepository } from "../../../modules/identity/identity.repository.js";
 import {
   AuthenticationError,
   type AuthenticatedResponseLocals,
   type ResolveSessionUser,
   requireAuthenticatedActor,
   requirePermission,
-} from "../authentication";
+} from "../authentication.js";
 
 function pathParameter(value: string | string[] | undefined): string {
   return Array.isArray(value) ? (value[0] ?? "") : (value ?? "");

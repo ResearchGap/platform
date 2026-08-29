@@ -1,9 +1,9 @@
 import type { NextFunction, Request, Response } from "express";
 
-import { AuthorizationError, authorize } from "../../authorization/authorize";
-import type { AuthorizationActor } from "../../authorization/authorization.types";
-import type { Permission } from "../../authorization/permissions";
-import type { IdentityAccessRepository } from "../../modules/identity/identity.repository";
+import { AuthorizationError, authorize } from "../../authorization/authorize.js";
+import type { AuthorizationActor } from "../../authorization/authorization.types.js";
+import type { Permission } from "../../authorization/permissions.js";
+import type { IdentityAccessRepository } from "../../modules/identity/identity.repository.js";
 
 export type ResolveSessionUser = (headers: Request["headers"]) => Promise<{ id: string } | null>;
 

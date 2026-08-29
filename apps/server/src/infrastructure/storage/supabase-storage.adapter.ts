@@ -4,7 +4,7 @@ import {
   FileStorageError,
   type FileStorage,
   type StoredFile,
-} from "../../modules/media/file-storage";
+} from "../../modules/media/file-storage.js";
 
 const EXTENSIONS: Readonly<Record<string, string>> = {
   "image/jpeg": "jpg",

@@ -1,14 +1,14 @@
 import prisma from "@platform/db";
 
-import { RESOURCE_SCOPES, type ResourceScope } from "../../authorization/access-profiles";
+import { RESOURCE_SCOPES, type ResourceScope } from "../../authorization/access-profiles.js";
 
 import {
   BootcampConflictError,
   BootcampNotFoundError,
   BootcampSessionNotFoundError,
   BootcampSessionOrderError,
-} from "../../modules/bootcamp/bootcamp.errors";
-import type { BootcampRepository } from "../../modules/bootcamp/bootcamp.repository";
+} from "../../modules/bootcamp/bootcamp.errors.js";
+import type { BootcampRepository } from "../../modules/bootcamp/bootcamp.repository.js";
 import {
   BOOTCAMP_STATUSES,
   BOOTCAMP_TIMINGS,
@@ -24,7 +24,7 @@ import {
   type CreateBootcampSessionInput,
   type UpdateBootcampInput,
   type UpdateBootcampSessionInput,
-} from "../../modules/bootcamp/bootcamp.types";
+} from "../../modules/bootcamp/bootcamp.types.js";
 
 const personSelect = { id: true, name: true } as const;
 const coverSelect = {

@@ -9,15 +9,15 @@ import {
   ROLES,
   type AuthorizationActor,
   type RoleCode,
-} from "../../../authorization/authorization.types";
-import type { IdentityAccessRepository } from "../../../modules/identity/identity.repository";
+} from "../../../authorization/authorization.types.js";
+import type { IdentityAccessRepository } from "../../../modules/identity/identity.repository.js";
 import type {
   ApprovalDecision,
   ApprovalReviewResult,
   PublicRegistration,
   RegistrationResult,
-} from "../../../modules/identity/identity.types";
-import { createIdentityRouter } from "./identity";
+} from "../../../modules/identity/identity.types.js";
+import { createIdentityRouter } from "./identity.js";
 
 const servers: Server[] = [];
 

@@ -1,7 +1,10 @@
 import prisma from "@platform/db";
 
-import { ContentConflictError, ContentNotFoundError } from "../../modules/content/content.errors";
-import type { ResearchContentRepository } from "../../modules/content/content.repository";
+import {
+  ContentConflictError,
+  ContentNotFoundError,
+} from "../../modules/content/content.errors.js";
+import type { ResearchContentRepository } from "../../modules/content/content.repository.js";
 import {
   RESEARCH_CONTENT_STATUSES,
   type ContentListInput,
@@ -13,7 +16,7 @@ import {
   type ResearchContentSummary,
   type ResearchContentType,
   type UpdateResearchContentInput,
-} from "../../modules/content/content.types";
+} from "../../modules/content/content.types.js";
 
 const personSelect = { id: true, name: true } as const;
 const coverSelect = {

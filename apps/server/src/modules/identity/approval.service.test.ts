@@ -1,22 +1,22 @@
 import { describe, expect, test } from "bun:test";
 
-import { AuthorizationError } from "../../authorization/authorize";
+import { AuthorizationError } from "../../authorization/authorize.js";
 import {
   ACCESS_PROFILE_CODES,
   ACCOUNT_STATUSES,
   ROLES,
   type AuthorizationActor,
   type RoleCode,
-} from "../../authorization/authorization.types";
-import type { IdentityAccessRepository } from "./identity.repository";
-import { InvalidApprovalTransitionError } from "./identity.errors";
-import { ApprovalService } from "./approval.service";
+} from "../../authorization/authorization.types.js";
+import type { IdentityAccessRepository } from "./identity.repository.js";
+import { InvalidApprovalTransitionError } from "./identity.errors.js";
+import { ApprovalService } from "./approval.service.js";
 import {
   APPROVAL_DECISIONS,
   APPROVAL_STATUSES,
   type ApprovalDecision,
   type ApprovalReviewResult,
-} from "./identity.types";
+} from "./identity.types.js";
 
 class FakeApprovalRepository implements IdentityAccessRepository {
   actor: AuthorizationActor | null = null;

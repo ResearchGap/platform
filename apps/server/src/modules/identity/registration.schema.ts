@@ -6,7 +6,7 @@ import {
 } from "@platform/auth/password-policy";
 import { z } from "zod";
 
-import type { PublicRegistration } from "./identity.types";
+import type { PublicRegistration } from "./identity.types.js";
 
 const credentials = {
   name: z.string().trim().min(2).max(100),

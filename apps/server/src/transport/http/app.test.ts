@@ -3,7 +3,7 @@ import type { Server } from "node:http";
 import type { AddressInfo } from "node:net";
 import type { RequestHandler } from "express";
 
-import { createHttpApp } from "./app";
+import { createHttpApp } from "./app.js";
 
 const servers: Server[] = [];
 const authHandler: RequestHandler = (_request, response) => {

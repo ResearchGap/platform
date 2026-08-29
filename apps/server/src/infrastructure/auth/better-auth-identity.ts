@@ -5,7 +5,7 @@ import type {
   IdentityProvider,
   IdentitySignUpResult,
   RegistrationCredentials,
-} from "../../modules/identity/identity.types";
+} from "../../modules/identity/identity.types.js";
 
 type Auth = ReturnType<typeof createAuth>;
 

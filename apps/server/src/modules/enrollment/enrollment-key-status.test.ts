@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 
-import { evaluateEnrollmentKeyStatus } from "./enrollment-key-status";
-import { ENROLLMENT_KEY_STATUSES, PERSISTED_ENROLLMENT_KEY_STATUSES } from "./enrollment.types";
+import { evaluateEnrollmentKeyStatus } from "./enrollment-key-status.js";
+import { ENROLLMENT_KEY_STATUSES, PERSISTED_ENROLLMENT_KEY_STATUSES } from "./enrollment.types.js";
 
 const now = new Date("2026-08-27T00:00:00Z");
 

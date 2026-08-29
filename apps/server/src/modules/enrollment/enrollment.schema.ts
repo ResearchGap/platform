@@ -4,7 +4,7 @@ import {
   BOOTCAMP_ENROLLMENT_STATUSES,
   ENROLLMENT_KEY_AUDIENCES,
   ENROLLMENT_KEY_STATUSES,
-} from "./enrollment.types";
+} from "./enrollment.types.js";
 
 const dateTimeSchema = z
   .string()

@@ -1,15 +1,15 @@
 import { Router, type ErrorRequestHandler, type Response } from "express";
 import { z } from "zod";
 
-import { AuthorizationError } from "../../../authorization/authorize";
-import { PERMISSIONS } from "../../../authorization/permissions";
+import { AuthorizationError } from "../../../authorization/authorize.js";
+import { PERMISSIONS } from "../../../authorization/permissions.js";
 import {
   ContentConflictError,
   ContentLifecycleError,
   ContentMediaNotFoundError,
   ContentNotFoundError,
-} from "../../../modules/content/content.errors";
-import type { ResearchContentService } from "../../../modules/content/content.service";
+} from "../../../modules/content/content.errors.js";
+import type { ResearchContentService } from "../../../modules/content/content.service.js";
 import {
   contentIdSchema,
   contentListSchema,
@@ -17,15 +17,15 @@ import {
   createResearchContentSchema,
   publicContentListSchema,
   updateResearchContentSchema,
-} from "../../../modules/content/content.schema";
-import type { IdentityAccessRepository } from "../../../modules/identity/identity.repository";
+} from "../../../modules/content/content.schema.js";
+import type { IdentityAccessRepository } from "../../../modules/identity/identity.repository.js";
 import {
   AuthenticationError,
   type AuthenticatedResponseLocals,
   type ResolveSessionUser,
   requireAuthenticatedActor,
   requirePermission,
-} from "../authentication";
+} from "../authentication.js";
 
 function pathParameter(value: string | string[] | undefined): string {
   return Array.isArray(value) ? (value[0] ?? "") : (value ?? "");

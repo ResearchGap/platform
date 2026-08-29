@@ -1,4 +1,4 @@
-import type { WebinarStatus } from "./webinar.types";
+import type { WebinarStatus } from "./webinar.types.js";
 
 export class WebinarNotFoundError extends Error {
   constructor(message = "Webinar was not found") {

@@ -2,7 +2,7 @@ import type {
   AccountStatus,
   AuthorizationActor,
   RoleCode,
-} from "../../authorization/authorization.types";
+} from "../../authorization/authorization.types.js";
 import type {
   AdminApprovalSummary,
   AdminDashboardSummary,
@@ -16,7 +16,7 @@ import type {
   CurrentAccountDetail,
   UpdateUserProfileInput,
   UserProfileDetail,
-} from "./identity.types";
+} from "./identity.types.js";
 
 export interface IdentityAccessRepository {
   bootstrapSuperadmin(email: string): Promise<{ email: string; userId: string }>;

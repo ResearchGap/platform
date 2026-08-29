@@ -1,7 +1,7 @@
-import { authorize } from "../../authorization/authorize";
-import { PERMISSIONS } from "../../authorization/permissions";
-import type { IdentityAccessRepository } from "./identity.repository";
-import type { ApprovalDecision, ApprovalReviewResult } from "./identity.types";
+import { authorize } from "../../authorization/authorize.js";
+import { PERMISSIONS } from "../../authorization/permissions.js";
+import type { IdentityAccessRepository } from "./identity.repository.js";
+import type { ApprovalDecision, ApprovalReviewResult } from "./identity.types.js";
 
 export class ApprovalService {
   constructor(private readonly accessRepository: IdentityAccessRepository) {}

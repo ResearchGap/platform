@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { WEBINAR_SESSION_TYPES, WEBINAR_STATUSES, WEBINAR_TIMINGS } from "./webinar.types";
+import { WEBINAR_SESSION_TYPES, WEBINAR_STATUSES, WEBINAR_TIMINGS } from "./webinar.types.js";
 
 const titleSchema = z.string().trim().min(1).max(240);
 const slugSchema = z

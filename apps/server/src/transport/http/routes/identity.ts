@@ -2,38 +2,38 @@ import { APIError } from "better-auth/api";
 import { Router, type ErrorRequestHandler, type Response } from "express";
 import { z } from "zod";
 
-import { AuthorizationError } from "../../../authorization/authorize";
-import { PERMISSIONS } from "../../../authorization/permissions";
+import { AuthorizationError } from "../../../authorization/authorize.js";
+import { PERMISSIONS } from "../../../authorization/permissions.js";
 import {
   IdentityNotFoundError,
   InvalidAccountAdministrationError,
   InvalidApprovalTransitionError,
   PermissionOverrideConflictError,
-} from "../../../modules/identity/identity.errors";
+} from "../../../modules/identity/identity.errors.js";
 import type {
   CurrentAccountRepository,
   IdentityAccessRepository,
-} from "../../../modules/identity/identity.repository";
-import type { ApprovalService } from "../../../modules/identity/approval.service";
-import type { IdentityAdministrationService } from "../../../modules/identity/administration.service";
-import type { RegistrationService } from "../../../modules/identity/registration.service";
+} from "../../../modules/identity/identity.repository.js";
+import type { ApprovalService } from "../../../modules/identity/approval.service.js";
+import type { IdentityAdministrationService } from "../../../modules/identity/administration.service.js";
+import type { RegistrationService } from "../../../modules/identity/registration.service.js";
 import {
   adminApprovalListSchema,
   adminUserListSchema,
   createPermissionOverrideSchema,
   updateAdminAccountStatusSchema,
   updateAdminRoleSchema,
-} from "../../../modules/identity/administration.schema";
-import { updateUserProfileSchema } from "../../../modules/identity/profile.schema";
-import { publicRegistrationSchema } from "../../../modules/identity/registration.schema";
-import { APPROVAL_DECISIONS } from "../../../modules/identity/identity.types";
+} from "../../../modules/identity/administration.schema.js";
+import { updateUserProfileSchema } from "../../../modules/identity/profile.schema.js";
+import { publicRegistrationSchema } from "../../../modules/identity/registration.schema.js";
+import { APPROVAL_DECISIONS } from "../../../modules/identity/identity.types.js";
 import {
   AuthenticationError,
   type AuthenticatedResponseLocals,
   type ResolveSessionUser,
   requireAuthenticatedActor,
   requirePermission,
-} from "../authentication";
+} from "../authentication.js";
 
 const reviewSchema = z.object({
   decision: z.enum([APPROVAL_DECISIONS.APPROVE, APPROVAL_DECISIONS.REJECT]),

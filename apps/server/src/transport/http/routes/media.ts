@@ -2,25 +2,25 @@ import { Router, type ErrorRequestHandler, type Response } from "express";
 import multer from "multer";
 import { z } from "zod";
 
-import { AuthorizationError } from "../../../authorization/authorize";
-import { PERMISSIONS } from "../../../authorization/permissions";
+import { AuthorizationError } from "../../../authorization/authorize.js";
+import { PERMISSIONS } from "../../../authorization/permissions.js";
 import {
   MediaConflictError,
   MediaNotFoundError,
   MediaValidationError,
-} from "../../../modules/media/media.errors";
-import { MAX_MEDIA_BYTES } from "../../../modules/media/media.service";
-import type { MediaService } from "../../../modules/media/media.service";
-import { FileStorageError } from "../../../modules/media/file-storage";
-import { mediaIdSchema } from "../../../modules/media/media.schema";
-import type { IdentityAccessRepository } from "../../../modules/identity/identity.repository";
+} from "../../../modules/media/media.errors.js";
+import { MAX_MEDIA_BYTES } from "../../../modules/media/media.service.js";
+import type { MediaService } from "../../../modules/media/media.service.js";
+import { FileStorageError } from "../../../modules/media/file-storage.js";
+import { mediaIdSchema } from "../../../modules/media/media.schema.js";
+import type { IdentityAccessRepository } from "../../../modules/identity/identity.repository.js";
 import {
   AuthenticationError,
   type AuthenticatedResponseLocals,
   type ResolveSessionUser,
   requireAuthenticatedActor,
   requirePermission,
-} from "../authentication";
+} from "../authentication.js";
 
 const multipart = multer({
   storage: multer.memoryStorage(),

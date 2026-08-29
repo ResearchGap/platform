@@ -2,18 +2,18 @@ import {
   RESOURCE_SCOPES,
   RESOURCE_TYPES,
   type ResourceScope,
-} from "../../authorization/access-profiles";
-import { AuthorizationError, authorizeResource } from "../../authorization/authorize";
-import type { AuthorizationActor } from "../../authorization/authorization.types";
-import { PERMISSIONS } from "../../authorization/permissions";
+} from "../../authorization/access-profiles.js";
+import { AuthorizationError, authorizeResource } from "../../authorization/authorize.js";
+import type { AuthorizationActor } from "../../authorization/authorization.types.js";
+import { PERMISSIONS } from "../../authorization/permissions.js";
 import {
   InvalidWebinarTransitionError,
   WebinarConflictError,
   WebinarLifecycleError,
   WebinarMediaNotFoundError,
   WebinarNotFoundError,
-} from "./webinar.errors";
-import type { WebinarRepository } from "./webinar.repository";
+} from "./webinar.errors.js";
+import type { WebinarRepository } from "./webinar.repository.js";
 import {
   WEBINAR_STATUSES,
   type CreateWebinarInput,
@@ -23,7 +23,7 @@ import {
   type WebinarDetail,
   type WebinarListInput,
   type WebinarSummary,
-} from "./webinar.types";
+} from "./webinar.types.js";
 
 function toPublicSummary(webinar: WebinarSummary): PublicWebinarSummary {
   if (

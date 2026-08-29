@@ -1,16 +1,16 @@
 import { Router, type ErrorRequestHandler, type Response } from "express";
 
-import { AuthorizationError } from "../../../authorization/authorize";
-import { PERMISSIONS } from "../../../authorization/permissions";
-import type { ExecutiveService } from "../../../modules/executive/executive.service";
-import type { IdentityAccessRepository } from "../../../modules/identity/identity.repository";
+import { AuthorizationError } from "../../../authorization/authorize.js";
+import { PERMISSIONS } from "../../../authorization/permissions.js";
+import type { ExecutiveService } from "../../../modules/executive/executive.service.js";
+import type { IdentityAccessRepository } from "../../../modules/identity/identity.repository.js";
 import {
   AuthenticationError,
   type AuthenticatedResponseLocals,
   type ResolveSessionUser,
   requireAuthenticatedActor,
   requirePermission,
-} from "../authentication";
+} from "../authentication.js";
 
 export function createExecutiveRouter(input: {
   executiveService: ExecutiveService;

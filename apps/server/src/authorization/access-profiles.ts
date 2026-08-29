@@ -1,5 +1,5 @@
-import { ACCESS_PROFILE_CODES, type AccessProfileCode } from "./authorization.types";
-import { PERMISSIONS, type Permission } from "./permissions";
+import { ACCESS_PROFILE_CODES, type AccessProfileCode } from "./authorization.types.js";
+import { PERMISSIONS, type Permission } from "./permissions.js";
 
 export const FULL_ACCESS = "*" as const;
 

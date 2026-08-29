@@ -1,4 +1,4 @@
-import type { MediaAssetRecord } from "./media.types";
+import type { MediaAssetRecord } from "./media.types.js";
 
 export interface MediaRepository {
   createManaged(input: {

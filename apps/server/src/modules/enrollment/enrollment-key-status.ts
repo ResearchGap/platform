@@ -3,7 +3,7 @@ import {
   PERSISTED_ENROLLMENT_KEY_STATUSES,
   type EnrollmentKeyStatus,
   type PersistedEnrollmentKeyStatus,
-} from "./enrollment.types";
+} from "./enrollment.types.js";
 
 export interface EnrollmentKeyStateInput {
   expiresAt: Date | null;

@@ -1,14 +1,14 @@
 import { Router, type ErrorRequestHandler, type Response } from "express";
 import { z } from "zod";
 
-import { AuthorizationError } from "../../../authorization/authorize";
-import { PERMISSIONS } from "../../../authorization/permissions";
+import { AuthorizationError } from "../../../authorization/authorize.js";
+import { PERMISSIONS } from "../../../authorization/permissions.js";
 import {
   WebinarConflictError,
   WebinarLifecycleError,
   WebinarMediaNotFoundError,
   WebinarNotFoundError,
-} from "../../../modules/webinar/webinar.errors";
+} from "../../../modules/webinar/webinar.errors.js";
 import {
   createWebinarSchema,
   publicWebinarListSchema,
@@ -17,16 +17,16 @@ import {
   webinarIdSchema,
   webinarListSchema,
   webinarSlugSchema,
-} from "../../../modules/webinar/webinar.schema";
-import type { WebinarService } from "../../../modules/webinar/webinar.service";
-import type { IdentityAccessRepository } from "../../../modules/identity/identity.repository";
+} from "../../../modules/webinar/webinar.schema.js";
+import type { WebinarService } from "../../../modules/webinar/webinar.service.js";
+import type { IdentityAccessRepository } from "../../../modules/identity/identity.repository.js";
 import {
   AuthenticationError,
   type AuthenticatedResponseLocals,
   type ResolveSessionUser,
   requireAuthenticatedActor,
   requirePermission,
-} from "../authentication";
+} from "../authentication.js";
 
 function pathParameter(value: string | string[] | undefined): string {
   return Array.isArray(value) ? (value[0] ?? "") : (value ?? "");

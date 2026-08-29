@@ -1,4 +1,4 @@
-import { serverConfig } from "./config";
+import { serverConfig } from "./config.js";
 import {
   authHandler,
   bootcampRouter,
@@ -9,8 +9,8 @@ import {
   mediaRouter,
   researchContentRouter,
   webinarRouter,
-} from "./infrastructure";
-import { createHttpApp } from "./transport/http/app";
+} from "./infrastructure.js";
+import { createHttpApp } from "./transport/http/app.js";
 import type { Express } from "express";
 
 export const app: Express = createHttpApp({
@@ -25,3 +25,5 @@ export const app: Express = createHttpApp({
   researchContentRouter,
   webinarRouter,
 });
+
+export default app;

@@ -6,7 +6,7 @@ import type {
   WebinarPage,
   WebinarStatus,
   WebinarSummary,
-} from "./webinar.types";
+} from "./webinar.types.js";
 
 export interface WebinarRepository {
   coverAssetExists(id: string): Promise<boolean>;

@@ -5,21 +5,21 @@ import {
   ROLES,
   type AccountStatus,
   type RoleCode,
-} from "../../authorization/authorization.types";
-import { BOOTCAMP_STATUSES, type BootcampStatus } from "../../modules/bootcamp/bootcamp.types";
+} from "../../authorization/authorization.types.js";
+import { BOOTCAMP_STATUSES, type BootcampStatus } from "../../modules/bootcamp/bootcamp.types.js";
 import {
   RESEARCH_CONTENT_STATUSES,
   RESEARCH_CONTENT_TYPES,
   type ResearchContentStatus,
   type ResearchContentType,
-} from "../../modules/content/content.types";
+} from "../../modules/content/content.types.js";
 import {
   BOOTCAMP_ENROLLMENT_STATUSES,
   type BootcampEnrollmentStatus,
-} from "../../modules/enrollment/enrollment.types";
-import type { ExecutiveSummaryRepository } from "../../modules/executive/executive.repository";
-import type { ExecutiveSummary } from "../../modules/executive/executive.types";
-import { WEBINAR_STATUSES, type WebinarStatus } from "../../modules/webinar/webinar.types";
+} from "../../modules/enrollment/enrollment.types.js";
+import type { ExecutiveSummaryRepository } from "../../modules/executive/executive.repository.js";
+import type { ExecutiveSummary } from "../../modules/executive/executive.types.js";
+import { WEBINAR_STATUSES, type WebinarStatus } from "../../modules/webinar/webinar.types.js";
 
 function countFor<T extends string>(
   groups: ReadonlyArray<{ count: number; key: T }>,

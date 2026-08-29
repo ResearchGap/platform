@@ -1,6 +1,6 @@
 import prisma from "@platform/db";
 
-import { ROLE_DEFAULT_ACCESS } from "../../authorization/roles";
+import { ROLE_DEFAULT_ACCESS } from "../../authorization/roles.js";
 import {
   ACCESS_PROFILE_CODES,
   ACCOUNT_STATUSES,
@@ -8,16 +8,16 @@ import {
   type AccountStatus,
   type AuthorizationActor,
   type RoleCode,
-} from "../../authorization/authorization.types";
+} from "../../authorization/authorization.types.js";
 import {
   IdentityNotFoundError,
   InvalidApprovalTransitionError,
   PermissionOverrideConflictError,
-} from "../../modules/identity/identity.errors";
+} from "../../modules/identity/identity.errors.js";
 import type {
   IdentityAccessRepository,
   IdentityAdministrationRepository,
-} from "../../modules/identity/identity.repository";
+} from "../../modules/identity/identity.repository.js";
 import {
   APPROVAL_DECISIONS,
   APPROVAL_STATUSES,
@@ -32,7 +32,7 @@ import {
   type CurrentAccountDetail,
   type UpdateUserProfileInput,
   type UserProfileDetail,
-} from "../../modules/identity/identity.types";
+} from "../../modules/identity/identity.types.js";
 
 const adminProfileSelect = {
   affiliation: true,

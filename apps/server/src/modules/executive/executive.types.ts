@@ -1,8 +1,8 @@
-import type { AccountStatus, RoleCode } from "../../authorization/authorization.types";
-import type { BootcampStatus } from "../bootcamp/bootcamp.types";
-import type { BootcampEnrollmentStatus } from "../enrollment/enrollment.types";
-import type { ResearchContentStatus, ResearchContentType } from "../content/content.types";
-import type { WebinarSessionType, WebinarStatus } from "../webinar/webinar.types";
+import type { AccountStatus, RoleCode } from "../../authorization/authorization.types.js";
+import type { BootcampStatus } from "../bootcamp/bootcamp.types.js";
+import type { BootcampEnrollmentStatus } from "../enrollment/enrollment.types.js";
+import type { ResearchContentStatus, ResearchContentType } from "../content/content.types.js";
+import type { WebinarSessionType, WebinarStatus } from "../webinar/webinar.types.js";
 
 export interface ExecutiveSummary {
   generatedAt: Date;

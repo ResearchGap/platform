@@ -1,4 +1,4 @@
-import type { ResearchContentStatus } from "./content.types";
+import type { ResearchContentStatus } from "./content.types.js";
 
 export class ContentNotFoundError extends Error {
   constructor(message = "Research content was not found") {

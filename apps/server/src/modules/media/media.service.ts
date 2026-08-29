@@ -1,13 +1,13 @@
 import { randomUUID } from "node:crypto";
 
-import { RESOURCE_SCOPES, RESOURCE_TYPES } from "../../authorization/access-profiles";
-import { AuthorizationError, authorizeResource } from "../../authorization/authorize";
-import type { AuthorizationActor } from "../../authorization/authorization.types";
-import { PERMISSIONS } from "../../authorization/permissions";
-import { MediaConflictError, MediaNotFoundError, MediaValidationError } from "./media.errors";
-import type { FileStorage } from "./file-storage";
-import type { MediaRepository } from "./media.repository";
-import { MEDIA_SOURCE_TYPES, type MediaAssetDto, type MediaAssetRecord } from "./media.types";
+import { RESOURCE_SCOPES, RESOURCE_TYPES } from "../../authorization/access-profiles.js";
+import { AuthorizationError, authorizeResource } from "../../authorization/authorize.js";
+import type { AuthorizationActor } from "../../authorization/authorization.types.js";
+import { PERMISSIONS } from "../../authorization/permissions.js";
+import { MediaConflictError, MediaNotFoundError, MediaValidationError } from "./media.errors.js";
+import type { FileStorage } from "./file-storage.js";
+import type { MediaRepository } from "./media.repository.js";
+import { MEDIA_SOURCE_TYPES, type MediaAssetDto, type MediaAssetRecord } from "./media.types.js";
 
 export const MAX_MEDIA_BYTES = 2 * 1024 * 1024;
 export const SUPPORTED_IMAGE_MIME_TYPES = [

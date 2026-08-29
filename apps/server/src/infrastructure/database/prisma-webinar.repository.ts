@@ -1,7 +1,10 @@
 import prisma from "@platform/db";
 
-import { WebinarConflictError, WebinarNotFoundError } from "../../modules/webinar/webinar.errors";
-import type { WebinarRepository } from "../../modules/webinar/webinar.repository";
+import {
+  WebinarConflictError,
+  WebinarNotFoundError,
+} from "../../modules/webinar/webinar.errors.js";
+import type { WebinarRepository } from "../../modules/webinar/webinar.repository.js";
 import {
   WEBINAR_STATUSES,
   WEBINAR_TIMINGS,
@@ -14,7 +17,7 @@ import {
   type WebinarSessionType,
   type WebinarStatus,
   type WebinarSummary,
-} from "../../modules/webinar/webinar.types";
+} from "../../modules/webinar/webinar.types.js";
 
 const personSelect = { id: true, name: true } as const;
 const coverSelect = {

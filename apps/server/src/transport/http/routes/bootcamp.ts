@@ -1,8 +1,8 @@
 import { Router, type ErrorRequestHandler, type Response } from "express";
 import { z } from "zod";
 
-import { AuthorizationError } from "../../../authorization/authorize";
-import { PERMISSIONS } from "../../../authorization/permissions";
+import { AuthorizationError } from "../../../authorization/authorize.js";
+import { PERMISSIONS } from "../../../authorization/permissions.js";
 import {
   BootcampConflictError,
   BootcampDateRangeError,
@@ -11,7 +11,7 @@ import {
   BootcampNotFoundError,
   BootcampSessionNotFoundError,
   BootcampSessionOrderError,
-} from "../../../modules/bootcamp/bootcamp.errors";
+} from "../../../modules/bootcamp/bootcamp.errors.js";
 import {
   bootcampIdSchema,
   bootcampListSchema,
@@ -24,16 +24,16 @@ import {
   updateBootcampSchema,
   updateBootcampCoverSchema,
   updateBootcampSessionSchema,
-} from "../../../modules/bootcamp/bootcamp.schema";
-import type { BootcampService } from "../../../modules/bootcamp/bootcamp.service";
-import type { IdentityAccessRepository } from "../../../modules/identity/identity.repository";
+} from "../../../modules/bootcamp/bootcamp.schema.js";
+import type { BootcampService } from "../../../modules/bootcamp/bootcamp.service.js";
+import type { IdentityAccessRepository } from "../../../modules/identity/identity.repository.js";
 import {
   AuthenticationError,
   type AuthenticatedResponseLocals,
   type ResolveSessionUser,
   requireAuthenticatedActor,
   requirePermission,
-} from "../authentication";
+} from "../authentication.js";
 
 function pathParameter(value: string | string[] | undefined): string {
   return Array.isArray(value) ? (value[0] ?? "") : (value ?? "");

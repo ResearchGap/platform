@@ -1,7 +1,7 @@
-import { authorize } from "../../authorization/authorize";
-import type { AuthorizationActor } from "../../authorization/authorization.types";
-import { PERMISSIONS } from "../../authorization/permissions";
-import type { ExecutiveSummaryRepository } from "./executive.repository";
+import { authorize } from "../../authorization/authorize.js";
+import type { AuthorizationActor } from "../../authorization/authorization.types.js";
+import { PERMISSIONS } from "../../authorization/permissions.js";
+import type { ExecutiveSummaryRepository } from "./executive.repository.js";
 
 export class ExecutiveService {
   constructor(private readonly repository: ExecutiveSummaryRepository) {}

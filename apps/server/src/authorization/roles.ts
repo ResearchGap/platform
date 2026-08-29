@@ -3,7 +3,7 @@ import {
   ROLES,
   type AccessProfileCode,
   type RoleCode,
-} from "./authorization.types";
+} from "./authorization.types.js";
 
 export const ROLE_DEFAULT_ACCESS: Readonly<Record<RoleCode, AccessProfileCode>> = {
   [ROLES.MENTEE]: ACCESS_PROFILE_CODES.MENTEE_DEFAULT,
