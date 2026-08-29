@@ -84,7 +84,12 @@ export default function SignInForm({ nextPath = "/dashboard" }: { nextPath?: Rou
         <form.Field name="password">
           {(field) => (
             <Field data-invalid={field.state.meta.errors.length > 0}>
-              <FieldLabel htmlFor={field.name}>Password</FieldLabel>
+              <div className="flex items-center justify-between gap-4">
+                <FieldLabel htmlFor={field.name}>Password</FieldLabel>
+                <Link className="text-sm font-medium" href={"/forgot-password" as Route}>
+                  Forgot password?
+                </Link>
+              </div>
               <Input
                 id={field.name}
                 name={field.name}

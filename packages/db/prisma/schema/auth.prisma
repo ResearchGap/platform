@@ -25,6 +25,9 @@ model User {
   bootcampEnrollments         BootcampEnrollment[]       @relation("MenteeBootcampEnrollment")
   bootcampMentorAssignments   BootcampMentor[]           @relation("BootcampMentorUser")
   bootcampMentorsAssigned     BootcampMentor[]           @relation("BootcampMentorAssigner")
+  passwordResetRequests       PasswordResetRequest[]      @relation("PasswordResetTarget")
+  passwordResetRequestsMade   PasswordResetRequest[]      @relation("PasswordResetRequester")
+  passwordResetLinksRevealed  PasswordResetRequest[]      @relation("PasswordResetRevealer")
 
   @@unique([email])
   @@map("user")

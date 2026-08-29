@@ -10,6 +10,12 @@
       "import": "./dist/server.js",
       "default": "./dist/server.js"
     },
+    "./password-reset": {
+      "types": "./src/password-reset.ts",
+      "bun": "./src/password-reset.ts",
+      "import": "./dist/password-reset.js",
+      "default": "./dist/password-reset.js"
+    },
     "./web": {
       "types": "./src/web.ts",
       "bun": "./src/web.ts",

@@ -10,6 +10,7 @@ interface HttpAppDependencies {
   executiveRouter?: Router;
   identityRouter?: Router;
   mediaRouter?: Router;
+  passwordResetRouter?: Router;
   researchContentRouter?: Router;
   webinarRouter?: Router;
 }
@@ -23,6 +24,7 @@ export function createHttpApp({
   executiveRouter,
   identityRouter,
   mediaRouter,
+  passwordResetRouter,
   researchContentRouter,
   webinarRouter,
 }: HttpAppDependencies): Express {
@@ -61,6 +63,9 @@ export function createHttpApp({
   }
   if (mediaRouter) {
     app.use("/api", mediaRouter);
+  }
+  if (passwordResetRouter) {
+    app.use("/api", passwordResetRouter);
   }
 
   app.get("/", (_request, response) => {

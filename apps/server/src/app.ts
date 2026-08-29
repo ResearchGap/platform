@@ -7,6 +7,7 @@ import {
   executiveRouter,
   identityRouter,
   mediaRouter,
+  passwordResetRouter,
   researchContentRouter,
   webinarRouter,
 } from "./infrastructure.js";
@@ -22,6 +23,7 @@ export const app: Express = createHttpApp({
   executiveRouter,
   identityRouter,
   mediaRouter,
+  passwordResetRouter,
   researchContentRouter,
   webinarRouter,
 });

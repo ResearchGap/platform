@@ -10,6 +10,7 @@ import { notFound } from "next/navigation";
 
 import { AccountStatusBadge, ApprovalStatusBadge } from "@/components/admin/account-status-badge";
 import { UserAdministration } from "@/components/admin/user-administration";
+import { PasswordResetSupport } from "@/components/admin/password-reset-support";
 import { RoleBadge } from "@/components/auth/role-badge";
 import { PageHeading } from "@/components/public/page-heading";
 import { getAdminUser, listPermissionCatalog } from "@/lib/api/admin";
@@ -17,6 +18,8 @@ import type { AdminUserDetail } from "@/lib/api/admin-types";
 import { ApiError } from "@/lib/api/client";
 import { formatDateTime } from "@/lib/public-format";
 import { authenticatedRequestInit } from "@/lib/server-auth";
+import { listPasswordResetRequests } from "@/lib/api/password-reset";
+import type { PasswordResetRequestSummary } from "@/lib/api/password-reset";
 
 export const metadata: Metadata = { title: "User detail" };
 
@@ -25,10 +28,12 @@ export default async function UserDetailPage({ params }: { params: Promise<{ use
   const requestInit = await authenticatedRequestInit();
   let user: AdminUserDetail;
   let permissions: string[];
+  let passwordResetRequests: PasswordResetRequestSummary[];
   try {
-    [user, { items: permissions }] = await Promise.all([
+    [user, { items: permissions }, { items: passwordResetRequests }] = await Promise.all([
       getAdminUser(userId, requestInit),
       listPermissionCatalog(requestInit),
+      listPasswordResetRequests(userId, requestInit),
     ]);
   } catch (error) {
     if (error instanceof ApiError && error.status === 404) notFound();
@@ -101,6 +106,7 @@ export default async function UserDetailPage({ params }: { params: Promise<{ use
         </Card>
       </div>
       <UserAdministration user={user} permissions={permissions} />
+      <PasswordResetSupport userId={user.id} initialRequests={passwordResetRequests} />
     </div>
   );
 }
