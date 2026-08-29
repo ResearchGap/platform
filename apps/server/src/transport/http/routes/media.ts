@@ -80,7 +80,7 @@ export function createMediaRouter(input: {
       response.status(400).json({
         error: "invalid_media_upload",
         message:
-          error.code === "LIMIT_FILE_SIZE" ? "Image must not exceed 5 MB" : "Invalid media upload",
+          error.code === "LIMIT_FILE_SIZE" ? "Image must not exceed 2 MB" : "Invalid media upload",
       });
       return;
     }

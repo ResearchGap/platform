@@ -29,7 +29,7 @@ This project uses PostgreSQL with Prisma.
 
 1. Make sure you have a PostgreSQL database set up.
 2. Copy `apps/server/.env.example` to `apps/server/.env` and set the real values.
-3. Copy `apps/web/.env.example` to `apps/web/.env` and set the backend URL.
+3. Copy `apps/web/.env.example` to `apps/web/.env` and set the public web and private API origins.
 
 4. Validate the Prisma schema and generate the client:
 
@@ -52,6 +52,7 @@ bun run dev
 
 Open [http://localhost:3001](http://localhost:3001) in your browser to see the web application.
 The API is running at [http://localhost:3000](http://localhost:3000).
+Browser API requests use `http://localhost:3001/api/*` and are proxied to the API server.
 
 Operational checks are available at:
 
@@ -115,3 +116,8 @@ platform/
 - `bun run db:generate`: Generate database client/types
 - `bun run db:migrate`: Run database migrations
 - `bun run db:studio`: Open database studio UI
+
+## Deployment
+
+See the two-project Vercel topology and environment-variable ownership in
+[`docs/architecture.md`](docs/architecture.md#23-deployment-architecture).

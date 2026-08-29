@@ -715,6 +715,45 @@ Supabase Storage
 
 This is a deployment strategy, not an application architecture requirement.
 
+## Vercel Project Topology
+
+Deploy this monorepo as two Vercel projects:
+
+```text
+Web project (Root Directory: apps/web)
+  /api/*
+     -> Next.js rewrite using SERVER_API_ORIGIN
+     -> API project /api/*
+
+API project (Root Directory: apps/server)
+  -> Express
+```
+
+The browser uses the web origin for application and Better Auth requests. `SERVER_API_ORIGIN` is
+server-only and points the Next.js rewrite at the API deployment; it must not use a
+`NEXT_PUBLIC_` prefix.
+
+Environment ownership:
+
+```text
+Web project
+  NEXT_PUBLIC_SERVER_URL  public web origin
+  SERVER_API_ORIGIN       API deployment origin (server-only)
+
+API project
+  DATABASE_URL
+  BETTER_AUTH_SECRET
+  BETTER_AUTH_URL         public web origin
+  CORS_ORIGIN             public web origin
+  SUPABASE_URL
+  SUPABASE_SECRET_KEY
+  SUPABASE_STORAGE_BUCKET
+  SUPERADMIN_EMAIL        optional bootstrap input, not a normal runtime requirement
+```
+
+Database, authentication, and storage secrets belong only to the API project. This proxy is a
+deployment boundary; business and application services remain independent of Vercel.
+
 ---
 
 # 24. Self-Hosted Deployment

@@ -11,7 +11,7 @@ import { useEffect } from "react";
 
 import { MediaCover } from "@/components/public/media-cover";
 import { ApiError } from "@/lib/api/client";
-import { getMedia, uploadMedia, type MediaAssetDto } from "@/lib/api/media";
+import { getMedia, MAX_MEDIA_BYTES, uploadMedia, type MediaAssetDto } from "@/lib/api/media";
 
 const ACCEPTED_IMAGES = "image/jpeg,image/png,image/webp,image/avif";
 
@@ -73,11 +73,18 @@ export function MediaUploader({
             accept={ACCEPTED_IMAGES}
             disabled={isUploading}
             onChange={(event) => {
-              setFile(event.target.files?.[0] ?? null);
+              const selectedFile = event.target.files?.[0] ?? null;
+              if (selectedFile && selectedFile.size > MAX_MEDIA_BYTES) {
+                setFile(null);
+                setError("Image must not exceed 2 MB.");
+                event.target.value = "";
+                return;
+              }
+              setFile(selectedFile);
               setError(null);
             }}
           />
-          <FieldDescription>JPEG, PNG, WebP, or AVIF. Maximum 5 MB.</FieldDescription>
+          <FieldDescription>JPEG, PNG, WebP, or AVIF. Maximum 2 MB.</FieldDescription>
         </Field>
         <Button
           type="button"

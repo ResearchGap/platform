@@ -1,5 +1,7 @@
 import { apiRequest } from "./client";
 
+export const MAX_MEDIA_BYTES = 2 * 1024 * 1024;
+
 export interface MediaAssetDto {
   createdAt: string;
   id: string;
