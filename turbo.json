@@ -4,6 +4,18 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
+      "env": [
+        "DATABASE_URL",
+        "BETTER_AUTH_SECRET",
+        "BETTER_AUTH_URL",
+        "CORS_ORIGIN",
+        "SUPABASE_URL",
+        "SUPABASE_SECRET_KEY",
+        "SUPABASE_STORAGE_BUCKET",
+        "SUPERADMIN_EMAIL",
+        "NEXT_PUBLIC_SERVER_URL",
+        "SERVER_API_ORIGIN"
+      ],
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
       "outputs": ["dist/**", ".next/**", "!.next/cache/**", "!.next/dev/**"]
     },

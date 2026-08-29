@@ -2,6 +2,8 @@
   "extends": "@platform/config/tsconfig.base.json",
   "compilerOptions": {
     "composite": true,
+    "strict": true,
+    "strictNullChecks": true,
     "outDir": "dist",
     "paths": {
       "@/*": ["./src/*"]
