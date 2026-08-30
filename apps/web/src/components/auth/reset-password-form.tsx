@@ -1,20 +1,9 @@
 "use client";
 
-import {
-  PASSWORD_REQUIREMENTS,
-  PASSWORD_POLICY_ERROR,
-  satisfiesPasswordPolicy,
-} from "@platform/auth/password-policy";
+import { PASSWORD_POLICY_ERROR, satisfiesPasswordPolicy } from "@platform/auth/password-policy";
 import { Alert, AlertDescription, AlertTitle } from "@platform/ui/components/alert";
 import { Button } from "@platform/ui/components/button";
-import {
-  Field,
-  FieldDescription,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-} from "@platform/ui/components/field";
-import { Input } from "@platform/ui/components/input";
+import { Field, FieldError, FieldGroup, FieldLabel } from "@platform/ui/components/field";
 import { Spinner } from "@platform/ui/components/spinner";
 import { useForm } from "@tanstack/react-form";
 import { AlertCircle, CircleCheck } from "lucide-react";
@@ -24,6 +13,11 @@ import { useState } from "react";
 import { z } from "zod";
 
 import { completePasswordReset } from "@/lib/api/password-reset";
+import {
+  PasswordInput,
+  PasswordMatchFeedback,
+  PasswordPolicyFeedback,
+} from "@/components/auth/password-input";
 
 const schema = z
   .object({
@@ -105,16 +99,16 @@ export function ResetPasswordForm({
           {(field) => (
             <Field data-invalid={field.state.meta.errors.length > 0}>
               <FieldLabel htmlFor={field.name}>New Password</FieldLabel>
-              <Input
+              <PasswordInput
                 id={field.name}
-                type="password"
+                name={field.name}
                 autoComplete="new-password"
                 value={field.state.value}
                 onBlur={field.handleBlur}
                 onChange={(event) => field.handleChange(event.target.value)}
                 aria-invalid={field.state.meta.errors.length > 0}
               />
-              <FieldDescription>{PASSWORD_REQUIREMENTS}</FieldDescription>
+              <PasswordPolicyFeedback password={field.state.value} />
               <FieldError errors={field.state.meta.errors} />
             </Field>
           )}
@@ -123,15 +117,22 @@ export function ResetPasswordForm({
           {(field) => (
             <Field data-invalid={field.state.meta.errors.length > 0}>
               <FieldLabel htmlFor={field.name}>Confirm Password</FieldLabel>
-              <Input
+              <PasswordInput
                 id={field.name}
-                type="password"
+                name={field.name}
                 autoComplete="new-password"
                 value={field.state.value}
                 onBlur={field.handleBlur}
                 onChange={(event) => field.handleChange(event.target.value)}
                 aria-invalid={field.state.meta.errors.length > 0}
               />
+              {field.state.meta.errors.length === 0 ? (
+                <form.Subscribe selector={(state) => state.values.password}>
+                  {(password) => (
+                    <PasswordMatchFeedback password={password} confirmation={field.state.value} />
+                  )}
+                </form.Subscribe>
+              ) : null}
               <FieldError errors={field.state.meta.errors} />
             </Field>
           )}

@@ -4,7 +4,6 @@ import {
   PASSWORD_MAX_LENGTH,
   PASSWORD_MIN_LENGTH,
   PASSWORD_POLICY_ERROR,
-  PASSWORD_REQUIREMENTS,
   satisfiesPasswordPolicy,
 } from "@platform/auth/password-policy";
 import { Alert, AlertDescription, AlertTitle } from "@platform/ui/components/alert";
@@ -36,6 +35,11 @@ import { z } from "zod";
 
 import { registerAccount } from "@/lib/api/account";
 import { ApiError } from "@/lib/api/client";
+import {
+  PasswordInput,
+  PasswordMatchFeedback,
+  PasswordPolicyFeedback,
+} from "@/components/auth/password-input";
 
 type RegistrationKind = "MENTEE" | "MENTOR" | "STAFF";
 type StaffRole = "CEO" | "COO" | "CMO";
@@ -185,17 +189,16 @@ export default function SignUpForm({ kind }: { kind: RegistrationKind }) {
             {(field) => (
               <Field data-invalid={field.state.meta.errors.length > 0}>
                 <FieldLabel htmlFor={field.name}>Password</FieldLabel>
-                <Input
+                <PasswordInput
                   id={field.name}
                   name={field.name}
-                  type="password"
                   autoComplete="new-password"
                   value={field.state.value}
                   onBlur={field.handleBlur}
                   onChange={(event) => field.handleChange(event.target.value)}
                   aria-invalid={field.state.meta.errors.length > 0}
                 />
-                <FieldDescription>{PASSWORD_REQUIREMENTS}</FieldDescription>
+                <PasswordPolicyFeedback password={field.state.value} />
                 <FieldError errors={field.state.meta.errors} />
               </Field>
             )}
@@ -205,16 +208,22 @@ export default function SignUpForm({ kind }: { kind: RegistrationKind }) {
             {(field) => (
               <Field data-invalid={field.state.meta.errors.length > 0}>
                 <FieldLabel htmlFor={field.name}>Confirm password</FieldLabel>
-                <Input
+                <PasswordInput
                   id={field.name}
                   name={field.name}
-                  type="password"
                   autoComplete="new-password"
                   value={field.state.value}
                   onBlur={field.handleBlur}
                   onChange={(event) => field.handleChange(event.target.value)}
                   aria-invalid={field.state.meta.errors.length > 0}
                 />
+                {field.state.meta.errors.length === 0 ? (
+                  <form.Subscribe selector={(state) => state.values.password}>
+                    {(password) => (
+                      <PasswordMatchFeedback password={password} confirmation={field.state.value} />
+                    )}
+                  </form.Subscribe>
+                ) : null}
                 <FieldError errors={field.state.meta.errors} />
               </Field>
             )}

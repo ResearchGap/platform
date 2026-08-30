@@ -12,6 +12,7 @@ import type {
   NativePasswordResetProvider,
   PasswordResetRepository,
 } from "./password-reset.repository.js";
+import { PASSWORD_RESET_DELIVERY_IN_PROGRESS } from "./password-reset.repository.js";
 import type { ResetLinkCipher } from "./reset-link-cipher.js";
 import {
   PASSWORD_RESET_DELIVERY_MODES,
@@ -28,6 +29,16 @@ const RATE_WINDOW_MS = 15 * 60 * 1000;
 const EMAIL_RATE_LIMIT = 5;
 const IP_RATE_LIMIT = 20;
 const MINIMUM_PUBLIC_RESPONSE_MS = 500;
+const SUCCESSFUL_DELIVERY_COOLDOWN_MS = 10 * 60 * 1000;
+const SUCCESSFUL_DELIVERY_WINDOW_MS = 60 * 60 * 1000;
+const MAX_SUCCESSFUL_DELIVERIES_PER_WINDOW = 2;
+const FAILED_DELIVERY_BACKOFF_MS = 60 * 1000;
+const IN_FLIGHT_DELIVERY_LEASE_MS = 60 * 1000;
+
+interface PasswordResetServiceOptions {
+  minimumPublicResponseMs?: number;
+  now?: () => Date;
+}
 
 export const PASSWORD_RESET_PUBLIC_MESSAGE =
   "If an account exists for this email, a password reset link has been sent.";
@@ -39,6 +50,7 @@ export class PasswordResetService {
     private readonly emailSender: EmailSender,
     private readonly cipher: ResetLinkCipher,
     private readonly publicOrigin: string,
+    private readonly options: PasswordResetServiceOptions = {},
   ) {}
 
   async request(input: {
@@ -67,7 +79,7 @@ export class PasswordResetService {
         requestId,
         status: PASSWORD_RESET_STATUSES.NO_ACCOUNT,
       });
-      await ensureMinimumDuration(startedAt);
+      await this.ensureMinimumDuration(startedAt);
       return { message: PASSWORD_RESET_PUBLIC_MESSAGE };
     }
 
@@ -75,15 +87,39 @@ export class PasswordResetService {
     const recent = await this.repository.countRecent({
       email,
       ipAddress: input.ipAddress,
-      since: new Date(Date.now() - RATE_WINDOW_MS),
+      since: new Date(this.now().getTime() - RATE_WINDOW_MS),
     });
     if (recent.byEmail > EMAIL_RATE_LIMIT || recent.byIp > IP_RATE_LIMIT) {
       await this.repository.updateStatus({
         requestId,
-        status: PASSWORD_RESET_STATUSES.DELIVERY_FAILED,
+        status: PASSWORD_RESET_STATUSES.REQUESTED,
         safeDeliveryError: "RATE_LIMITED",
       });
-      await ensureMinimumDuration(startedAt);
+      await this.ensureMinimumDuration(startedAt);
+      return { message: PASSWORD_RESET_PUBLIC_MESSAGE };
+    }
+
+    const shouldIssue = await this.repository.withEmailDeliveryLock(email, async () => {
+      const now = this.now();
+      const deliveryState = await this.repository.getEmailDeliveryState({
+        email,
+        excludeRequestId: requestId,
+        successfulSince: new Date(now.getTime() - SUCCESSFUL_DELIVERY_WINDOW_MS),
+        failureSince: new Date(now.getTime() - FAILED_DELIVERY_BACKOFF_MS),
+        inFlightSince: new Date(now.getTime() - IN_FLIGHT_DELIVERY_LEASE_MS + 1),
+      });
+      const suppressionReason = deliverySuppressionReason(deliveryState, now);
+
+      await this.repository.updateStatus({
+        requestId,
+        status: PASSWORD_RESET_STATUSES.REQUESTED,
+        safeDeliveryError: suppressionReason ?? PASSWORD_RESET_DELIVERY_IN_PROGRESS,
+      });
+      return suppressionReason === null;
+    });
+
+    if (!shouldIssue) {
+      await this.ensureMinimumDuration(startedAt);
       return { message: PASSWORD_RESET_PUBLIC_MESSAGE };
     }
 
@@ -105,7 +141,7 @@ export class PasswordResetService {
       }
     }
 
-    await ensureMinimumDuration(startedAt);
+    await this.ensureMinimumDuration(startedAt);
     return { message: PASSWORD_RESET_PUBLIC_MESSAGE };
   }
 
@@ -115,7 +151,7 @@ export class PasswordResetService {
     url: string;
     user: { email: string };
   }): Promise<void> {
-    const expiresAt = new Date(Date.now() + TOKEN_LIFETIME_MS);
+    const expiresAt = new Date(this.now().getTime() + TOKEN_LIFETIME_MS);
     const encryptedUrl = this.cipher.encrypt(input.url);
     await this.repository.recordIssued({
       requestId: input.requestId,
@@ -137,7 +173,8 @@ export class PasswordResetService {
       await this.repository.updateStatus({
         requestId: input.requestId,
         status: PASSWORD_RESET_STATUSES.EMAIL_SENT,
-        emailSentAt: new Date(),
+        emailSentAt: this.now(),
+        safeDeliveryError: null,
       });
     } catch (error) {
       await this.repository.updateStatus({
@@ -155,7 +192,7 @@ export class PasswordResetService {
       !request?.userId ||
       request.status === PASSWORD_RESET_STATUSES.COMPLETED ||
       !request.expiresAt ||
-      request.expiresAt <= new Date()
+      request.expiresAt <= this.now()
     ) {
       throw new InvalidPasswordResetError();
     }
@@ -170,7 +207,7 @@ export class PasswordResetService {
       throw new InvalidPasswordResetError();
     }
 
-    const completed = await this.repository.markCompleted(input.requestId, new Date());
+    const completed = await this.repository.markCompleted(input.requestId, this.now());
     if (!completed) {
       throw new InvalidPasswordResetError();
     }
@@ -226,7 +263,7 @@ export class PasswordResetService {
   async reveal(input: { actor: PasswordResetSupportInput["actor"]; requestId: string }) {
     authorize(input.actor, PERMISSIONS.PASSWORD_RESET_ASSIST);
     const request = await this.repository.findById(input.requestId);
-    const now = new Date();
+    const now = this.now();
     if (!request) {
       throw new PasswordResetNotFoundError();
     }
@@ -252,6 +289,17 @@ export class PasswordResetService {
       throw new PasswordResetConflictError("This reset link can no longer be revealed");
     }
     return { url };
+  }
+
+  private now(): Date {
+    return this.options.now?.() ?? new Date();
+  }
+
+  private async ensureMinimumDuration(startedAt: number): Promise<void> {
+    await ensureMinimumDuration(
+      startedAt,
+      this.options.minimumPublicResponseMs ?? MINIMUM_PUBLIC_RESPONSE_MS,
+    );
   }
 }
 
@@ -292,11 +340,41 @@ function toDto(request: PasswordResetRecord): PasswordResetRequestDto {
   };
 }
 
-async function ensureMinimumDuration(startedAt: number): Promise<void> {
-  const remaining = MINIMUM_PUBLIC_RESPONSE_MS - (Date.now() - startedAt);
+async function ensureMinimumDuration(startedAt: number, minimumDurationMs: number): Promise<void> {
+  const remaining = minimumDurationMs - (Date.now() - startedAt);
   if (remaining > 0) {
     await new Promise((resolve) => setTimeout(resolve, remaining));
   }
+}
+
+function deliverySuppressionReason(
+  state: {
+    hasInFlightDelivery: boolean;
+    latestFailedRequestAt: Date | null;
+    latestSuccessfulEmailSentAt: Date | null;
+    successfulDeliveryCount: number;
+  },
+  now: Date,
+): string | null {
+  if (
+    state.latestSuccessfulEmailSentAt &&
+    state.latestSuccessfulEmailSentAt > new Date(now.getTime() - SUCCESSFUL_DELIVERY_COOLDOWN_MS)
+  ) {
+    return "SUCCESSFUL_DELIVERY_COOLDOWN";
+  }
+  if (state.successfulDeliveryCount >= MAX_SUCCESSFUL_DELIVERIES_PER_WINDOW) {
+    return "SUCCESSFUL_DELIVERY_QUOTA";
+  }
+  if (
+    state.latestFailedRequestAt &&
+    state.latestFailedRequestAt > new Date(now.getTime() - FAILED_DELIVERY_BACKOFF_MS)
+  ) {
+    return "FAILED_DELIVERY_BACKOFF";
+  }
+  if (state.hasInFlightDelivery) {
+    return "DELIVERY_ALREADY_IN_PROGRESS";
+  }
+  return null;
 }
 
 function safeDeliveryError(error: unknown): string {

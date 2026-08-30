@@ -20,6 +20,7 @@ import { useState } from "react";
 import { z } from "zod";
 
 import { authClient } from "@/lib/auth-client";
+import { PasswordInput } from "@/components/auth/password-input";
 
 const loginSchema = z.object({
   email: z.email("Enter a valid email address"),
@@ -90,10 +91,9 @@ export default function SignInForm({ nextPath = "/dashboard" }: { nextPath?: Rou
                   Forgot password?
                 </Link>
               </div>
-              <Input
+              <PasswordInput
                 id={field.name}
                 name={field.name}
-                type="password"
                 autoComplete="current-password"
                 value={field.state.value}
                 onBlur={field.handleBlur}

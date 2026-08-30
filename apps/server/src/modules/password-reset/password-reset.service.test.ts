@@ -13,6 +13,7 @@ import type {
   NativePasswordResetProvider,
   PasswordResetRepository,
 } from "./password-reset.repository.js";
+import { PASSWORD_RESET_DELIVERY_IN_PROGRESS } from "./password-reset.repository.js";
 import { PasswordResetService, PASSWORD_RESET_PUBLIC_MESSAGE } from "./password-reset.service.js";
 import type { ResetLinkCipher } from "./reset-link-cipher.js";
 import {
@@ -24,7 +25,10 @@ import {
 
 class FakeRepository implements PasswordResetRepository {
   readonly records = new Map<string, PasswordResetRecord>();
+  private readonly locks = new Map<string, Promise<void>>();
   user: { email: string; id: string } | null = null;
+
+  constructor(private readonly now: () => Date) {}
 
   async create(input: Parameters<PasswordResetRepository["create"]>[0]) {
     this.records.set(input.id, {
@@ -34,7 +38,7 @@ class FakeRepository implements PasswordResetRepository {
       source: input.source,
       deliveryMode: input.deliveryMode,
       status: PASSWORD_RESET_STATUSES.REQUESTED,
-      requestedAt: new Date(),
+      requestedAt: this.now(),
       expiresAt: null,
       emailSentAt: null,
       completedAt: null,
@@ -51,6 +55,42 @@ class FakeRepository implements PasswordResetRepository {
 
   async countRecent() {
     return { byEmail: 1, byIp: 1 };
+  }
+
+  async getEmailDeliveryState(
+    input: Parameters<PasswordResetRepository["getEmailDeliveryState"]>[0],
+  ) {
+    const records = [...this.records.values()].filter(
+      (record) => record.requestedEmail === input.email && record.id !== input.excludeRequestId,
+    );
+    const successful = records
+      .filter((record) => record.emailSentAt !== null)
+      .sort(
+        (left, right) =>
+          (right.emailSentAt as Date).getTime() - (left.emailSentAt as Date).getTime(),
+      );
+    const failed = records
+      .filter(
+        (record) =>
+          record.deliveryMode === PASSWORD_RESET_DELIVERY_MODES.EMAIL &&
+          record.status === PASSWORD_RESET_STATUSES.DELIVERY_FAILED &&
+          record.requestedAt >= input.failureSince,
+      )
+      .sort((left, right) => right.requestedAt.getTime() - left.requestedAt.getTime());
+    return {
+      hasInFlightDelivery: records.some(
+        (record) =>
+          record.status === PASSWORD_RESET_STATUSES.REQUESTED &&
+          record.deliveryMode === PASSWORD_RESET_DELIVERY_MODES.EMAIL &&
+          record.safeDeliveryError === PASSWORD_RESET_DELIVERY_IN_PROGRESS &&
+          record.requestedAt >= input.inFlightSince,
+      ),
+      latestFailedRequestAt: failed[0]?.requestedAt ?? null,
+      latestSuccessfulEmailSentAt: successful[0]?.emailSentAt ?? null,
+      successfulDeliveryCount: successful.filter(
+        (record) => (record.emailSentAt as Date) >= input.successfulSince,
+      ).length,
+    };
   }
 
   async findById(requestId: string) {
@@ -94,7 +134,25 @@ class FakeRepository implements PasswordResetRepository {
     const record = this.record(input.requestId);
     record.status = input.status;
     record.emailSentAt = input.emailSentAt ?? record.emailSentAt;
-    record.safeDeliveryError = input.safeDeliveryError ?? record.safeDeliveryError;
+    if (input.safeDeliveryError !== undefined) {
+      record.safeDeliveryError = input.safeDeliveryError;
+    }
+  }
+
+  async withEmailDeliveryLock<T>(email: string, operation: () => Promise<T>): Promise<T> {
+    const previous = this.locks.get(email) ?? Promise.resolve();
+    let release: (() => void) | undefined;
+    const current = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    this.locks.set(email, current);
+    await previous;
+    try {
+      return await operation();
+    } finally {
+      release?.();
+      if (this.locks.get(email) === current) this.locks.delete(email);
+    }
   }
 
   private record(id: string) {
@@ -150,7 +208,9 @@ class FakeProvider implements NativePasswordResetProvider {
 }
 
 function setup() {
-  const repository = new FakeRepository();
+  let currentTime = new Date("2026-08-29T10:00:00.000Z");
+  const now = () => new Date(currentTime);
+  const repository = new FakeRepository(now);
   const provider = new FakeProvider();
   const sender = new FakeEmailSender();
   const service = new PasswordResetService(
@@ -159,9 +219,18 @@ function setup() {
     sender,
     new FakeCipher(),
     "https://app.example.test",
+    { now, minimumPublicResponseMs: 0 },
   );
   provider.service = service;
-  return { provider, repository, sender, service };
+  return {
+    provider,
+    repository,
+    sender,
+    service,
+    setNow(value: string) {
+      currentTime = new Date(value);
+    },
+  };
 }
 
 function superadminActor(): AuthorizationActor {
@@ -216,6 +285,87 @@ describe("password reset service", () => {
     expect(record?.resetUrlEncrypted).toBe("ciphertext-1");
   });
 
+  test("suppresses successful delivery for ten minutes, then permits another send", async () => {
+    const { provider, repository, sender, service, setNow } = setup();
+    repository.user = { id: "user-1", email: "known@example.com" };
+
+    await service.request({ email: "KNOWN@example.com", ipAddress: null, userAgent: null });
+    setNow("2026-08-29T10:05:00.000Z");
+    const suppressed = await service.request({
+      email: "known@example.com",
+      ipAddress: null,
+      userAgent: null,
+    });
+
+    expect(suppressed).toEqual({ message: PASSWORD_RESET_PUBLIC_MESSAGE });
+    expect(provider.issueCalls).toBe(1);
+    expect(sender.attempts).toBe(1);
+
+    setNow("2026-08-29T10:10:00.000Z");
+    await service.request({ email: "known@example.com", ipAddress: null, userAgent: null });
+    expect(provider.issueCalls).toBe(2);
+    expect(sender.attempts).toBe(2);
+  });
+
+  test("allows two successful deliveries per rolling hour and counts completed requests", async () => {
+    const { provider, repository, sender, service, setNow } = setup();
+    repository.user = { id: "user-1", email: "known@example.com" };
+
+    await service.request({ email: "known@example.com", ipAddress: null, userAgent: null });
+    const first = [...repository.records.values()][0];
+    if (!first) throw new Error("Missing first request");
+    first.status = PASSWORD_RESET_STATUSES.COMPLETED;
+    first.completedAt = new Date("2026-08-29T10:05:00.000Z");
+
+    setNow("2026-08-29T10:12:00.000Z");
+    await service.request({ email: "known@example.com", ipAddress: null, userAgent: null });
+    setNow("2026-08-29T10:23:00.000Z");
+    await service.request({ email: "known@example.com", ipAddress: null, userAgent: null });
+
+    expect(provider.issueCalls).toBe(2);
+    expect(sender.attempts).toBe(2);
+
+    setNow("2026-08-29T11:01:00.000Z");
+    await service.request({ email: "known@example.com", ipAddress: null, userAgent: null });
+    expect(provider.issueCalls).toBe(3);
+    expect(sender.attempts).toBe(3);
+  });
+
+  test("backs off failed SMTP delivery briefly without counting it toward delivery quota", async () => {
+    const { provider, repository, sender, service, setNow } = setup();
+    repository.user = { id: "user-1", email: "known@example.com" };
+    sender.fail = true;
+
+    await service.request({ email: "known@example.com", ipAddress: null, userAgent: null });
+    setNow("2026-08-29T10:00:30.000Z");
+    await service.request({ email: "known@example.com", ipAddress: null, userAgent: null });
+    expect(provider.issueCalls).toBe(1);
+    expect(sender.attempts).toBe(1);
+
+    sender.fail = false;
+    setNow("2026-08-29T10:01:00.000Z");
+    await service.request({ email: "known@example.com", ipAddress: null, userAgent: null });
+    expect(provider.issueCalls).toBe(2);
+    expect(sender.attempts).toBe(2);
+  });
+
+  test("serializes simultaneous requests so only one delivery is issued", async () => {
+    const { provider, repository, sender, service } = setup();
+    repository.user = { id: "user-1", email: "known@example.com" };
+
+    const results = await Promise.all([
+      service.request({ email: "known@example.com", ipAddress: "127.0.0.1", userAgent: null }),
+      service.request({ email: "KNOWN@example.com", ipAddress: "127.0.0.1", userAgent: null }),
+    ]);
+
+    expect(results).toEqual([
+      { message: PASSWORD_RESET_PUBLIC_MESSAGE },
+      { message: PASSWORD_RESET_PUBLIC_MESSAGE },
+    ]);
+    expect(provider.issueCalls).toBe(1);
+    expect(sender.attempts).toBe(1);
+  });
+
   test("authorizes manual generation and records controlled reveal", async () => {
     const { repository, service } = setup();
     repository.user = { id: "user-1", email: "known@example.com" };
@@ -248,7 +398,7 @@ describe("password reset service", () => {
     const actor = superadminActor();
     const expired = await service.createManual({ actor, userId: "user-1" });
     const oldRecord = repository.records.get(expired.id);
-    if (oldRecord) oldRecord.expiresAt = new Date(Date.now() - 1);
+    if (oldRecord) oldRecord.expiresAt = new Date("2026-08-29T09:59:59.999Z");
 
     expect(service.reveal({ actor, requestId: expired.id })).rejects.toBeInstanceOf(
       PasswordResetConflictError,

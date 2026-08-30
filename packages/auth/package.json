@@ -18,9 +18,10 @@
   "scripts": {
     "build": "tsc --project tsconfig.build.json",
     "check-types": "tsc --noEmit",
-    "format": "biome format --config-path ../../biome.json --write src package.json tsconfig.json tsconfig.build.json",
-    "format:check": "biome format --config-path ../../biome.json src package.json tsconfig.json tsconfig.build.json",
-    "lint": "biome lint --config-path ../../biome.json src package.json tsconfig.json tsconfig.build.json"
+    "format": "biome format --config-path ../../biome.json --write src tests package.json tsconfig.json tsconfig.build.json",
+    "format:check": "biome format --config-path ../../biome.json src tests package.json tsconfig.json tsconfig.build.json",
+    "lint": "biome lint --config-path ../../biome.json src tests package.json tsconfig.json tsconfig.build.json",
+    "test": "bun test tests"
   },
   "dependencies": {
     "@platform/db": "workspace:*",

@@ -5,11 +5,25 @@ import type {
   PasswordResetStatus,
 } from "./password-reset.types.js";
 
+export const PASSWORD_RESET_DELIVERY_IN_PROGRESS = "DELIVERY_IN_PROGRESS";
+
 export interface PasswordResetRepository {
   attachUser(requestId: string, userId: string): Promise<void>;
   countRecent(input: { email: string; ipAddress: string | null; since: Date }): Promise<{
     byEmail: number;
     byIp: number;
+  }>;
+  getEmailDeliveryState(input: {
+    email: string;
+    excludeRequestId: string;
+    failureSince: Date;
+    inFlightSince: Date;
+    successfulSince: Date;
+  }): Promise<{
+    hasInFlightDelivery: boolean;
+    latestFailedRequestAt: Date | null;
+    latestSuccessfulEmailSentAt: Date | null;
+    successfulDeliveryCount: number;
   }>;
   create(input: {
     deliveryMode: PasswordResetDeliveryMode;
@@ -39,9 +53,10 @@ export interface PasswordResetRepository {
   updateStatus(input: {
     emailSentAt?: Date;
     requestId: string;
-    safeDeliveryError?: string;
+    safeDeliveryError?: string | null;
     status: PasswordResetStatus;
   }): Promise<void>;
+  withEmailDeliveryLock<T>(email: string, operation: () => Promise<T>): Promise<T>;
 }
 
 export interface NativePasswordResetProvider {
